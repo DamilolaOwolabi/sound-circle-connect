@@ -3,11 +3,32 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Settings, Video, Users } from "lucide-react";
 import RadiusIcon from '@/components/RadiusIcon';
+import { useNavigate } from 'react-router-dom';
+import { toast } from "@/components/ui/use-toast";
 
 const Index = () => {
   const [radiusMode, setRadiusMode] = React.useState(false);
+  const navigate = useNavigate();
 
   console.log('Radius Mode:', radiusMode);
+
+  const handleHostMeeting = () => {
+    console.log('Host meeting clicked');
+    toast({
+      title: "Creating new meeting...",
+      description: "You will be redirected to the meeting room.",
+    });
+    navigate('/meeting', { state: { isHost: true } });
+  };
+
+  const handleJoinMeeting = () => {
+    console.log('Join meeting clicked');
+    toast({
+      title: "Joining meeting...",
+      description: "You will be redirected to the meeting room.",
+    });
+    navigate('/meeting', { state: { isHost: false } });
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -28,7 +49,7 @@ const Index = () => {
           <Button 
             size="lg" 
             className="h-24 text-lg"
-            onClick={() => console.log('Host meeting clicked')}
+            onClick={handleHostMeeting}
           >
             <Video className="mr-2 h-5 w-5" />
             Host a Meeting
@@ -37,7 +58,7 @@ const Index = () => {
             size="lg" 
             className="h-24 text-lg"
             variant="secondary"
-            onClick={() => console.log('Join meeting clicked')}
+            onClick={handleJoinMeeting}
           >
             <Users className="mr-2 h-5 w-5" />
             Join a Meeting
