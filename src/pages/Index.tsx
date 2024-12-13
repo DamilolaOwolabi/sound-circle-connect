@@ -1,12 +1,48 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React, { useState } from 'react';
+import ParticipantTile from '@/components/ParticipantTile';
+import Controls from '@/components/Controls';
+import ParticipantsList from '@/components/ParticipantsList';
+
+const MOCK_PARTICIPANTS = [
+  { id: '1', name: 'You', isAudioOn: true, isVideoOn: true, radiusSize: 50 },
+  { id: '2', name: 'John Doe', isAudioOn: true, isVideoOn: false, radiusSize: 70 },
+  { id: '3', name: 'Jane Smith', isAudioOn: false, isVideoOn: true, radiusSize: 30 },
+  { id: '4', name: 'Alice Johnson', isAudioOn: true, isVideoOn: true, radiusSize: 60 },
+];
 
 const Index = () => {
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [isVideoOn, setIsVideoOn] = useState(true);
+
+  console.log('Audio state:', isAudioOn);
+  console.log('Video state:', isVideoOn);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background p-6">
+      <div className="flex gap-6">
+        <div className="flex-1">
+          <div className="grid grid-cols-2 gap-6">
+            {MOCK_PARTICIPANTS.map((participant) => (
+              <ParticipantTile
+                key={participant.id}
+                name={participant.name}
+                isAudioOn={participant.isAudioOn}
+                isVideoOn={participant.isVideoOn}
+                radiusSize={participant.radiusSize}
+                className="w-full"
+              />
+            ))}
+          </div>
+        </div>
+        <ParticipantsList participants={MOCK_PARTICIPANTS} />
       </div>
+      <Controls
+        isAudioOn={isAudioOn}
+        isVideoOn={isVideoOn}
+        onToggleAudio={() => setIsAudioOn(!isAudioOn)}
+        onToggleVideo={() => setIsVideoOn(!isVideoOn)}
+        onLeave={() => console.log('Leave meeting')}
+      />
     </div>
   );
 };
