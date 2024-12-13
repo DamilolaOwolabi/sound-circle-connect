@@ -24,19 +24,17 @@ const Meeting = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="flex gap-6">
-        <div className="flex-1">
-          <div className="grid grid-cols-2 gap-6">
-            {MOCK_PARTICIPANTS.map((participant) => (
-              <ParticipantTile
-                key={participant.id}
-                name={participant.name}
-                isAudioOn={participant.isAudioOn}
-                isVideoOn={participant.isVideoOn}
-                radiusSize={participant.radiusSize}
-                className="w-full"
-              />
-            ))}
-          </div>
+        <div className="flex-1 relative min-h-[600px]">
+          {MOCK_PARTICIPANTS.map((participant, index) => (
+            <ParticipantTile
+              key={participant.id}
+              name={participant.name}
+              isAudioOn={participant.isAudioOn}
+              isVideoOn={participant.isVideoOn}
+              radiusSize={participant.radiusSize}
+              className="w-64"
+            />
+          ))}
         </div>
         <ParticipantsList participants={MOCK_PARTICIPANTS} />
       </div>
