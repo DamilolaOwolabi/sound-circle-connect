@@ -26,6 +26,15 @@ const Meeting = () => {
           audio: true,
           video: true,
         });
+        
+        // Set initial track states
+        mediaStream.getAudioTracks().forEach(track => {
+          track.enabled = isAudioOn;
+        });
+        mediaStream.getVideoTracks().forEach(track => {
+          track.enabled = isVideoOn;
+        });
+        
         console.log('Media stream obtained successfully');
         setStream(mediaStream);
       } catch (error) {
@@ -42,31 +51,33 @@ const Meeting = () => {
 
     return () => {
       if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        console.log('Media stream tracks stopped');
+        stream.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped ${track.kind} track`);
+        });
       }
     };
   }, []);
 
   const toggleAudio = () => {
     if (stream) {
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = !isAudioOn;
-        setIsAudioOn(!isAudioOn);
-        console.log('Audio track toggled:', !isAudioOn);
-      }
+      const audioTracks = stream.getAudioTracks();
+      audioTracks.forEach(track => {
+        track.enabled = !isAudioOn;
+        console.log(`Audio track ${track.label} enabled: ${!isAudioOn}`);
+      });
+      setIsAudioOn(!isAudioOn);
     }
   };
 
   const toggleVideo = () => {
     if (stream) {
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = !isVideoOn;
-        setIsVideoOn(!isVideoOn);
-        console.log('Video track toggled:', !isVideoOn);
-      }
+      const videoTracks = stream.getVideoTracks();
+      videoTracks.forEach(track => {
+        track.enabled = !isVideoOn;
+        console.log(`Video track ${track.label} enabled: ${!isVideoOn}`);
+      });
+      setIsVideoOn(!isVideoOn);
     }
   };
 
