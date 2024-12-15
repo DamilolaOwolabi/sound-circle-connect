@@ -126,14 +126,11 @@ const ParticipantTile = ({
           {isVideoOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
         </div>
         <div 
-          className="absolute inset-0 pointer-events-none participant-radius"
+          className="absolute inset-0 pointer-events-none participant-radius radius-indicator"
           style={{
             background: `radial-gradient(circle at center, transparent ${radiusSize}%, rgba(99, 102, 241, 0.1) ${radiusSize}%)`
           }}
         />
-      </div>
-      <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
-        <div className="radius-indicator w-24 h-24 rounded-full border-2 border-accent/30" />
       </div>
     </div>
   );
