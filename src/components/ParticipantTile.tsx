@@ -96,7 +96,7 @@ const ParticipantTile = ({
     <div
       ref={tileRef}
       className={cn(
-        "participant-tile relative rounded-lg overflow-hidden bg-muted cursor-move",
+        "participant-tile relative cursor-move",
         isDragging && "opacity-75",
         className
       )}
@@ -113,17 +113,17 @@ const ParticipantTile = ({
         zIndex: isDragging ? 10 : 1
       }}
     >
-      <div className="aspect-video bg-secondary/10 relative">
+      <div className="w-24 h-24 rounded-full overflow-hidden bg-muted relative">
         {!isVideoOn && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-20 h-20 rounded-full bg-secondary/20 flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
+            <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center text-lg font-semibold">
               {name.charAt(0).toUpperCase()}
             </div>
           </div>
         )}
-        <div className="absolute bottom-2 left-2 flex gap-2">
-          {isAudioOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4 text-destructive" />}
-          {isVideoOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4 text-destructive" />}
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 rounded-full px-2 py-1">
+          {isAudioOn ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3 text-destructive" />}
+          {isVideoOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
         </div>
         <div 
           className="absolute inset-0 pointer-events-none participant-radius"
