@@ -4,6 +4,7 @@ import Controls from '@/components/Controls';
 import ParticipantsList from '@/components/ParticipantsList';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
+import { Slider } from '@/components/ui/slider';
 
 const MOCK_PARTICIPANTS = [
   { id: '2', name: 'John Doe', isAudioOn: true, isVideoOn: false, radiusSize: 70 },
@@ -11,10 +12,14 @@ const MOCK_PARTICIPANTS = [
   { id: '4', name: 'Alice Johnson', isAudioOn: true, isVideoOn: true, radiusSize: 60 },
 ];
 
+const MIN_RADIUS = 30;
+const MAX_RADIUS = 200;
+
 const Meeting = () => {
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [radiusSize, setRadiusSize] = useState(50);
   const location = useLocation();
   const isHost = location.state?.isHost;
   const { toast } = useToast();
@@ -81,6 +86,11 @@ const Meeting = () => {
     }
   };
 
+  const handleRadiusChange = (value: number[]) => {
+    setRadiusSize(value[0]);
+    console.log('Radius size changed to:', value[0]);
+  };
+
   console.log('Meeting role:', isHost ? 'Host' : 'Participant');
   console.log('Audio state:', isAudioOn);
   console.log('Video state:', isVideoOn);
@@ -94,7 +104,7 @@ const Meeting = () => {
             name="You"
             isAudioOn={isAudioOn}
             isVideoOn={isVideoOn}
-            radiusSize={50}
+            radiusSize={radiusSize}
             className="w-64"
             stream={stream}
           />
@@ -109,7 +119,23 @@ const Meeting = () => {
             />
           ))}
         </div>
-        <ParticipantsList participants={MOCK_PARTICIPANTS} />
+        <div className="flex flex-col gap-4">
+          <ParticipantsList participants={MOCK_PARTICIPANTS} />
+          <div className="bg-card p-4 rounded-lg shadow">
+            <h3 className="text-sm font-medium mb-2">Proximity Range</h3>
+            <Slider
+              defaultValue={[radiusSize]}
+              max={MAX_RADIUS}
+              min={MIN_RADIUS}
+              step={1}
+              onValueChange={handleRadiusChange}
+              className="w-48"
+            />
+            <p className="text-xs text-muted-foreground mt-1">
+              Range: {radiusSize}px
+            </p>
+          </div>
+        </div>
       </div>
       <Controls
         isAudioOn={isAudioOn}
