@@ -8,6 +8,7 @@ interface ParticipantTileProps {
   isVideoOn: boolean;
   radiusSize: number;
   className?: string;
+  stream?: MediaStream | null;
 }
 
 const ParticipantTile = ({
@@ -15,12 +16,21 @@ const ParticipantTile = ({
   isAudioOn,
   isVideoOn,
   radiusSize,
-  className
+  className,
+  stream
 }: ParticipantTileProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const tileRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      console.log('Video stream attached for:', name);
+    }
+  }, [stream, name]);
 
   const handleDragStart = (e: React.DragEvent) => {
     setIsDragging(true);
@@ -31,12 +41,11 @@ const ParticipantTile = ({
         y: e.clientY - rect.top
       };
     }
-    // Required for Firefox
     e.dataTransfer.setData('text/plain', '');
   };
 
   const handleDrag = (e: React.DragEvent) => {
-    if (!e.clientX || !e.clientY) return; // Ignore invalid drag events
+    if (!e.clientX || !e.clientY) return;
     
     setPosition({
       x: e.clientX - dragStartPos.current.x,
@@ -50,7 +59,6 @@ const ParticipantTile = ({
   };
 
   useEffect(() => {
-    // Check for radius intersection with other participants
     const checkRadiusIntersection = () => {
       const currentTile = tileRef.current;
       if (!currentTile) return;
@@ -114,7 +122,15 @@ const ParticipantTile = ({
       }}
     >
       <div className="w-24 h-24 rounded-full overflow-hidden bg-muted relative">
-        {!isVideoOn && (
+        {isVideoOn && stream ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted={!isAudioOn}
+            className="w-full h-full object-cover"
+          />
+        ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
             <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center text-lg font-semibold">
               {name.charAt(0).toUpperCase()}

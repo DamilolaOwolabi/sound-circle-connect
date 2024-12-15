@@ -1,21 +1,74 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ParticipantTile from '@/components/ParticipantTile';
 import Controls from '@/components/Controls';
 import ParticipantsList from '@/components/ParticipantsList';
 import { useLocation } from 'react-router-dom';
+import { useToast } from '@/components/ui/use-toast';
 
 const MOCK_PARTICIPANTS = [
-  { id: '1', name: 'You', isAudioOn: true, isVideoOn: true, radiusSize: 50 },
   { id: '2', name: 'John Doe', isAudioOn: true, isVideoOn: false, radiusSize: 70 },
   { id: '3', name: 'Jane Smith', isAudioOn: false, isVideoOn: true, radiusSize: 30 },
   { id: '4', name: 'Alice Johnson', isAudioOn: true, isVideoOn: true, radiusSize: 60 },
 ];
 
 const Meeting = () => {
-  const [isAudioOn, setIsAudioOn] = React.useState(true);
-  const [isVideoOn, setIsVideoOn] = React.useState(true);
+  const [isAudioOn, setIsAudioOn] = useState(true);
+  const [isVideoOn, setIsVideoOn] = useState(true);
+  const [stream, setStream] = useState<MediaStream | null>(null);
   const location = useLocation();
   const isHost = location.state?.isHost;
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const initializeMedia = async () => {
+      try {
+        const mediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+          video: true,
+        });
+        console.log('Media stream obtained successfully');
+        setStream(mediaStream);
+      } catch (error) {
+        console.error('Error accessing media devices:', error);
+        toast({
+          variant: "destructive",
+          title: "Media Access Error",
+          description: "Unable to access camera or microphone. Please check your permissions.",
+        });
+      }
+    };
+
+    initializeMedia();
+
+    return () => {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        console.log('Media stream tracks stopped');
+      }
+    };
+  }, []);
+
+  const toggleAudio = () => {
+    if (stream) {
+      const audioTrack = stream.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !isAudioOn;
+        setIsAudioOn(!isAudioOn);
+        console.log('Audio track toggled:', !isAudioOn);
+      }
+    }
+  };
+
+  const toggleVideo = () => {
+    if (stream) {
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !isVideoOn;
+        setIsVideoOn(!isVideoOn);
+        console.log('Video track toggled:', !isVideoOn);
+      }
+    }
+  };
 
   console.log('Meeting role:', isHost ? 'Host' : 'Participant');
   console.log('Audio state:', isAudioOn);
@@ -25,7 +78,16 @@ const Meeting = () => {
     <div className="min-h-screen bg-background p-6">
       <div className="flex gap-6">
         <div className="flex-1 relative min-h-[600px]">
-          {MOCK_PARTICIPANTS.map((participant, index) => (
+          <ParticipantTile
+            key="local-user"
+            name="You"
+            isAudioOn={isAudioOn}
+            isVideoOn={isVideoOn}
+            radiusSize={50}
+            className="w-64"
+            stream={stream}
+          />
+          {MOCK_PARTICIPANTS.map((participant) => (
             <ParticipantTile
               key={participant.id}
               name={participant.name}
@@ -41,8 +103,8 @@ const Meeting = () => {
       <Controls
         isAudioOn={isAudioOn}
         isVideoOn={isVideoOn}
-        onToggleAudio={() => setIsAudioOn(!isAudioOn)}
-        onToggleVideo={() => setIsVideoOn(!isVideoOn)}
+        onToggleAudio={toggleAudio}
+        onToggleVideo={toggleVideo}
         onLeave={() => console.log('Leave meeting')}
       />
     </div>
