@@ -41,6 +41,10 @@ const ParticipantTile = ({
     }
   }, [stream, name]);
 
+  useEffect(() => {
+    console.log('Background updated for', name, ':', background);
+  }, [background, name]);
+
   const handleDragStart = (e: React.DragEvent) => {
     setIsDragging(true);
     const rect = tileRef.current?.getBoundingClientRect();
@@ -119,16 +123,28 @@ const ParticipantTile = ({
 
   const isScreenShare = stream?.getVideoTracks().some(track => track.label.includes('screen'));
 
-  const videoStyle = background ? {
-    ...(background.type === 'blur' ? {
-      filter: 'blur(8px)',
-      transform: 'scale(1.1)'
-    } : {
-      backgroundImage: background.url ? `url(${background.url})` : undefined,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center'
-    })
-  } : {};
+  const getBackgroundStyle = () => {
+    if (!background) return {};
+
+    if (background.type === 'blur') {
+      return {
+        filter: 'blur(8px)',
+        transform: 'scale(1.1)'
+      };
+    }
+
+    if (background.url) {
+      return {
+        backgroundImage: `url(${background.url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center'
+      };
+    }
+
+    return {};
+  };
+
+  const videoStyle = getBackgroundStyle();
 
   return (
     <div

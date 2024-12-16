@@ -6,6 +6,7 @@ import ParticipantsGrid from '@/components/ParticipantsGrid';
 import RadiusControl from '@/components/RadiusControl';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
+import { toast } from '@/components/ui/use-toast';
 
 const MIN_RADIUS = 30;
 const MAX_RADIUS = 200;
@@ -47,13 +48,18 @@ const Meeting = () => {
   };
 
   const handleBackgroundSelect = (newBackground: { id: string; url?: string; type?: string }) => {
+    console.log('Setting new background:', newBackground);
     setBackground(newBackground);
-    console.log('Background changed to:', newBackground);
+    toast({
+      title: "Background Updated",
+      description: `Background has been changed to ${newBackground.id}`,
+    });
   };
 
   console.log('Meeting role:', isHost ? 'Host' : 'Participant');
   console.log('Audio state:', isAudioOn);
   console.log('Video state:', isVideoOn);
+  console.log('Current background:', background);
 
   return (
     <div className="min-h-screen bg-background p-6">
@@ -66,7 +72,7 @@ const Meeting = () => {
             radiusSize,
             stream,
             screenStream,
-            background  // Added background property
+            background
           }}
           mockParticipants={MOCK_PARTICIPANTS}
         />
