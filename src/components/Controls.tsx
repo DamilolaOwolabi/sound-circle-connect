@@ -3,13 +3,13 @@ import { Button } from '@/components/ui/button';
 import { 
   Mic, 
   MicOff, 
-  Video, 
+  Video as VideoIcon, 
   VideoOff, 
   PhoneOff, 
   Monitor, 
   Grid, 
   Maximize2,
-  Record,
+  Circle,
   Square 
 } from 'lucide-react';
 
@@ -54,7 +54,7 @@ const Controls = ({
         size="icon"
         onClick={onToggleVideo}
       >
-        {isVideoOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+        {isVideoOn ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
       </Button>
       <Button
         variant={isScreenSharing ? "secondary" : "outline"}
@@ -68,7 +68,7 @@ const Controls = ({
         size="icon"
         onClick={onToggleRecording}
       >
-        {isRecording ? <Square className="w-4 h-4" /> : <Record className="w-4 h-4" />}
+        {isRecording ? <Square className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
       </Button>
       <Button
         variant="outline"
