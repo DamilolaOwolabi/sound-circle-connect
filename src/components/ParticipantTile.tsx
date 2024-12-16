@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ParticipantTileProps {
@@ -115,6 +115,8 @@ const ParticipantTile = ({
     checkRadiusIntersection();
   }, [position, radiusSize, name]);
 
+  const isScreenShare = stream?.getVideoTracks().some(track => track.label.includes('screen'));
+
   return (
     <div
       ref={tileRef}
@@ -137,20 +139,26 @@ const ParticipantTile = ({
       }}
     >
       <div 
-        className="w-24 h-24 rounded-full overflow-hidden bg-muted relative"
+        className={cn(
+          "overflow-hidden bg-muted relative",
+          isScreenShare ? "w-full h-full rounded-lg" : "w-24 h-24 rounded-full"
+        )}
         style={{
-          width: `${radiusSize}px`,
-          height: `${radiusSize}px`,
+          width: isScreenShare ? '100%' : `${radiusSize}px`,
+          height: isScreenShare ? '100%' : `${radiusSize}px`,
           transition: 'all 0.3s ease-in-out'
         }}
       >
-        {isVideoOn && stream ? (
+        {(isVideoOn || isScreenShare) && stream ? (
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className="w-full h-full object-cover"
+            className={cn(
+              "w-full h-full",
+              isScreenShare ? "object-contain" : "object-cover"
+            )}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
@@ -169,13 +177,16 @@ const ParticipantTile = ({
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 rounded-full px-2 py-1">
           {isAudioOn ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3 text-destructive" />}
           {isVideoOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
+          {isScreenShare && <Monitor className="w-3 h-3" />}
         </div>
-        <div 
-          className="absolute inset-0 pointer-events-none participant-radius"
-          style={{
-            background: `radial-gradient(circle at center, transparent, ${isInRange ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)'})`
-          }}
-        />
+        {!isScreenShare && (
+          <div 
+            className="absolute inset-0 pointer-events-none participant-radius"
+            style={{
+              background: `radial-gradient(circle at center, transparent, ${isInRange ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)'})`
+            }}
+          />
+        )}
       </div>
     </div>
   );

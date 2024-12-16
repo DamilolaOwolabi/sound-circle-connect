@@ -1,20 +1,43 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Video, VideoOff, PhoneOff } from 'lucide-react';
+import { 
+  Mic, 
+  MicOff, 
+  Video, 
+  VideoOff, 
+  PhoneOff, 
+  Monitor, 
+  Grid, 
+  Maximize2,
+  Record,
+  Square 
+} from 'lucide-react';
 
 interface ControlsProps {
   isAudioOn: boolean;
   isVideoOn: boolean;
+  isRecording: boolean;
+  isScreenSharing: boolean;
+  layout: 'grid' | 'spotlight';
   onToggleAudio: () => void;
   onToggleVideo: () => void;
+  onToggleScreenShare: () => void;
+  onToggleRecording: () => void;
+  onToggleLayout: () => void;
   onLeave: () => void;
 }
 
 const Controls = ({
   isAudioOn,
   isVideoOn,
+  isRecording,
+  isScreenSharing,
+  layout,
   onToggleAudio,
   onToggleVideo,
+  onToggleScreenShare,
+  onToggleRecording,
+  onToggleLayout,
   onLeave
 }: ControlsProps) => {
   return (
@@ -32,6 +55,27 @@ const Controls = ({
         onClick={onToggleVideo}
       >
         {isVideoOn ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+      </Button>
+      <Button
+        variant={isScreenSharing ? "secondary" : "outline"}
+        size="icon"
+        onClick={onToggleScreenShare}
+      >
+        <Monitor className="w-4 h-4" />
+      </Button>
+      <Button
+        variant={isRecording ? "destructive" : "outline"}
+        size="icon"
+        onClick={onToggleRecording}
+      >
+        {isRecording ? <Square className="w-4 h-4" /> : <Record className="w-4 h-4" />}
+      </Button>
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={onToggleLayout}
+      >
+        {layout === 'grid' ? <Maximize2 className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
       </Button>
       <Button variant="destructive" size="icon" onClick={onLeave}>
         <PhoneOff className="w-4 h-4" />

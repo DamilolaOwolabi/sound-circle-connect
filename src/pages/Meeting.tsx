@@ -18,7 +18,13 @@ const MAX_RADIUS = 200;
 const Meeting = () => {
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
+  const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
+  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [radiusSize, setRadiusSize] = useState(50);
   const location = useLocation();
   const isHost = location.state?.isHost;
@@ -32,7 +38,6 @@ const Meeting = () => {
           video: true,
         });
         
-        // Set initial track states
         mediaStream.getAudioTracks().forEach(track => {
           track.enabled = isAudioOn;
         });
@@ -61,6 +66,14 @@ const Meeting = () => {
           console.log(`Stopped ${track.kind} track`);
         });
       }
+      if (screenStream) {
+        screenStream.getTracks().forEach(track => {
+          track.stop();
+        });
+      }
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
     };
   }, []);
 
@@ -86,6 +99,87 @@ const Meeting = () => {
     }
   };
 
+  const toggleScreenShare = async () => {
+    try {
+      if (!isScreenSharing) {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: true
+        });
+        setScreenStream(displayStream);
+        setIsScreenSharing(true);
+        toast({
+          title: "Screen Sharing Started",
+          description: "You are now sharing your screen.",
+        });
+      } else {
+        screenStream?.getTracks().forEach(track => track.stop());
+        setScreenStream(null);
+        setIsScreenSharing(false);
+        toast({
+          title: "Screen Sharing Stopped",
+          description: "You have stopped sharing your screen.",
+        });
+      }
+    } catch (error) {
+      console.error('Error toggling screen share:', error);
+      toast({
+        variant: "destructive",
+        title: "Screen Sharing Error",
+        description: "Unable to share screen. Please check your permissions.",
+      });
+    }
+  };
+
+  const toggleRecording = () => {
+    if (!isRecording) {
+      if (stream) {
+        const recorder = new MediaRecorder(stream);
+        setMediaRecorder(recorder);
+        
+        recorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            setRecordedChunks(prev => [...prev, event.data]);
+          }
+        };
+
+        recorder.onstop = () => {
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          document.body.appendChild(a);
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'recording.webm';
+          a.click();
+          window.URL.revokeObjectURL(url);
+          setRecordedChunks([]);
+        };
+
+        recorder.start();
+        setIsRecording(true);
+        toast({
+          title: "Recording Started",
+          description: "Your meeting is now being recorded.",
+        });
+      }
+    } else {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        setIsRecording(false);
+        toast({
+          title: "Recording Stopped",
+          description: "Recording has been saved.",
+        });
+      }
+    }
+  };
+
+  const toggleLayout = () => {
+    setLayout(prev => prev === 'grid' ? 'spotlight' : 'grid');
+    console.log('Layout changed to:', layout === 'grid' ? 'spotlight' : 'grid');
+  };
+
   const handleRadiusChange = (value: number[]) => {
     setRadiusSize(value[0]);
     console.log('Radius size changed to:', value[0]);
@@ -98,15 +192,15 @@ const Meeting = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="flex gap-6">
-        <div className="flex-1 relative min-h-[600px]">
+        <div className={`flex-1 relative min-h-[600px] ${layout === 'grid' ? 'grid grid-cols-3 gap-4' : 'flex justify-center'}`}>
           <ParticipantTile
             key="local-user"
             name="You"
             isAudioOn={isAudioOn}
             isVideoOn={isVideoOn}
             radiusSize={radiusSize}
-            className="w-64"
-            stream={stream}
+            className={layout === 'grid' ? '' : 'w-full max-w-2xl'}
+            stream={isScreenSharing ? screenStream : stream}
           />
           {MOCK_PARTICIPANTS.map((participant) => (
             <ParticipantTile
@@ -115,7 +209,7 @@ const Meeting = () => {
               isAudioOn={participant.isAudioOn}
               isVideoOn={participant.isVideoOn}
               radiusSize={participant.radiusSize}
-              className="w-64"
+              className={layout === 'grid' ? '' : 'hidden'}
             />
           ))}
         </div>
@@ -140,8 +234,14 @@ const Meeting = () => {
       <Controls
         isAudioOn={isAudioOn}
         isVideoOn={isVideoOn}
+        isRecording={isRecording}
+        isScreenSharing={isScreenSharing}
+        layout={layout}
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
+        onToggleScreenShare={toggleScreenShare}
+        onToggleRecording={toggleRecording}
+        onToggleLayout={toggleLayout}
         onLeave={() => console.log('Leave meeting')}
       />
     </div>
