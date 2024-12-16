@@ -17,6 +17,7 @@ interface ParticipantsGridProps {
     radiusSize: number;
     stream: MediaStream | null;
     screenStream: MediaStream | null;
+    background?: { id: string; url?: string; type?: string } | null;  // Updated type definition
   };
   mockParticipants: Participant[];
 }
@@ -32,6 +33,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
         radiusSize={localUser.radiusSize}
         className={layout === 'grid' ? '' : 'w-full max-w-2xl'}
         stream={localUser.screenStream || localUser.stream}
+        background={localUser.background}  // Pass background to ParticipantTile
       />
       {mockParticipants.map((participant) => (
         <ParticipantTile

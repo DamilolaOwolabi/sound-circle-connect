@@ -66,7 +66,7 @@ const Meeting = () => {
             radiusSize,
             stream,
             screenStream,
-            background
+            background  // Added background property
           }}
           mockParticipants={MOCK_PARTICIPANTS}
         />
