@@ -12,6 +12,7 @@ import {
   Circle,
   Square 
 } from 'lucide-react';
+import BackgroundSelector from './BackgroundSelector';
 
 interface ControlsProps {
   isAudioOn: boolean;
@@ -24,6 +25,7 @@ interface ControlsProps {
   onToggleScreenShare: () => void;
   onToggleRecording: () => void;
   onToggleLayout: () => void;
+  onSelectBackground: (background: { id: string; url?: string; type?: string }) => void;
   onLeave: () => void;
 }
 
@@ -38,6 +40,7 @@ const Controls = ({
   onToggleScreenShare,
   onToggleRecording,
   onToggleLayout,
+  onSelectBackground,
   onLeave
 }: ControlsProps) => {
   return (
@@ -70,6 +73,7 @@ const Controls = ({
       >
         {isRecording ? <Square className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
       </Button>
+      <BackgroundSelector onSelectBackground={onSelectBackground} />
       <Button
         variant="outline"
         size="icon"

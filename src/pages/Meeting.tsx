@@ -19,6 +19,7 @@ const MOCK_PARTICIPANTS = [
 const Meeting = () => {
   const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
   const [radiusSize, setRadiusSize] = useState(50);
+  const [background, setBackground] = useState<{ id: string; url?: string; type?: string } | null>(null);
   const location = useLocation();
   const isHost = location.state?.isHost;
 
@@ -45,6 +46,11 @@ const Meeting = () => {
     console.log('Layout changed to:', layout === 'grid' ? 'spotlight' : 'grid');
   };
 
+  const handleBackgroundSelect = (newBackground: { id: string; url?: string; type?: string }) => {
+    setBackground(newBackground);
+    console.log('Background changed to:', newBackground);
+  };
+
   console.log('Meeting role:', isHost ? 'Host' : 'Participant');
   console.log('Audio state:', isAudioOn);
   console.log('Video state:', isVideoOn);
@@ -59,7 +65,8 @@ const Meeting = () => {
             isVideoOn,
             radiusSize,
             stream,
-            screenStream
+            screenStream,
+            background
           }}
           mockParticipants={MOCK_PARTICIPANTS}
         />
@@ -84,6 +91,7 @@ const Meeting = () => {
         onToggleScreenShare={toggleScreenShare}
         onToggleRecording={toggleRecording}
         onToggleLayout={toggleLayout}
+        onSelectBackground={handleBackgroundSelect}
         onLeave={() => console.log('Leave meeting')}
       />
     </div>

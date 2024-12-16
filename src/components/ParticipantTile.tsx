@@ -9,6 +9,7 @@ interface ParticipantTileProps {
   radiusSize: number;
   className?: string;
   stream?: MediaStream | null;
+  background?: { id: string; url?: string; type?: string } | null;
 }
 
 const ParticipantTile = ({
@@ -17,7 +18,8 @@ const ParticipantTile = ({
   isVideoOn,
   radiusSize,
   className,
-  stream
+  stream,
+  background
 }: ParticipantTileProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -117,6 +119,17 @@ const ParticipantTile = ({
 
   const isScreenShare = stream?.getVideoTracks().some(track => track.label.includes('screen'));
 
+  const videoStyle = background ? {
+    ...(background.type === 'blur' ? {
+      filter: 'blur(8px)',
+      transform: 'scale(1.1)'
+    } : {
+      backgroundImage: background.url ? `url(${background.url})` : undefined,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center'
+    })
+  } : {};
+
   return (
     <div
       ref={tileRef}
@@ -159,6 +172,7 @@ const ParticipantTile = ({
               "w-full h-full",
               isScreenShare ? "object-contain" : "object-cover"
             )}
+            style={videoStyle}
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
