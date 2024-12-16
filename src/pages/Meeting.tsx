@@ -5,6 +5,7 @@ import ParticipantsList from '@/components/ParticipantsList';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { Slider } from '@/components/ui/slider';
+import { useRecording } from '@/hooks/useRecording';
 
 const MOCK_PARTICIPANTS = [
   { id: '2', name: 'John Doe', isAudioOn: true, isVideoOn: false, radiusSize: 70 },
@@ -19,16 +20,14 @@ const Meeting = () => {
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
   const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [screenStream, setScreenStream] = useState<MediaStream | null>(null);
-  const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [radiusSize, setRadiusSize] = useState(50);
   const location = useLocation();
   const isHost = location.state?.isHost;
   const { toast } = useToast();
+  const { isRecording, toggleRecording } = useRecording(stream);
 
   useEffect(() => {
     const initializeMedia = async () => {
@@ -70,9 +69,6 @@ const Meeting = () => {
         screenStream.getTracks().forEach(track => {
           track.stop();
         });
-      }
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
       }
     };
   }, []);
@@ -128,50 +124,6 @@ const Meeting = () => {
         title: "Screen Sharing Error",
         description: "Unable to share screen. Please check your permissions.",
       });
-    }
-  };
-
-  const toggleRecording = () => {
-    if (!isRecording) {
-      if (stream) {
-        const recorder = new MediaRecorder(stream);
-        setMediaRecorder(recorder);
-        
-        recorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            setRecordedChunks(prev => [...prev, event.data]);
-          }
-        };
-
-        recorder.onstop = () => {
-          const blob = new Blob(recordedChunks, { type: 'video/webm' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          document.body.appendChild(a);
-          a.style.display = 'none';
-          a.href = url;
-          a.download = 'recording.webm';
-          a.click();
-          window.URL.revokeObjectURL(url);
-          setRecordedChunks([]);
-        };
-
-        recorder.start();
-        setIsRecording(true);
-        toast({
-          title: "Recording Started",
-          description: "Your meeting is now being recorded.",
-        });
-      }
-    } else {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-        setIsRecording(false);
-        toast({
-          title: "Recording Stopped",
-          description: "Recording has been saved.",
-        });
-      }
     }
   };
 
