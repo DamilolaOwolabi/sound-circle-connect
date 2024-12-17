@@ -32,14 +32,24 @@ const ParticipantTile = ({
   useEffect(() => {
     if (stream && videoRef.current) {
       videoRef.current.srcObject = stream;
-      console.log('Video stream attached for:', name);
+      const videoTracks = stream.getVideoTracks();
+      videoTracks.forEach(track => {
+        track.enabled = isVideoOn;
+      });
+      console.log('Video stream attached and enabled state set to:', isVideoOn);
     }
+  }, [stream, isVideoOn]);
 
+  useEffect(() => {
     if (stream && audioRef.current) {
       audioRef.current.srcObject = stream;
-      console.log('Audio stream attached for:', name);
+      const audioTracks = stream.getAudioTracks();
+      audioTracks.forEach(track => {
+        track.enabled = isAudioOn;
+      });
+      console.log('Audio stream attached and enabled state set to:', isAudioOn);
     }
-  }, [stream, name]);
+  }, [stream, isAudioOn]);
 
   useEffect(() => {
     console.log('Background updated for', name, ':', background);
@@ -173,8 +183,8 @@ const ParticipantTile = ({
           isScreenShare ? "w-full h-full rounded-lg" : "rounded-full"
         )}
         style={{
-          width: isScreenShare ? '100%' : `${radiusSize * 2}px`,  // Doubled the size
-          height: isScreenShare ? '100%' : `${radiusSize * 2}px`, // Doubled the size
+          width: isScreenShare ? '100%' : `${radiusSize * 2}px`,
+          height: isScreenShare ? '100%' : `${radiusSize * 2}px`,
           transition: 'all 0.3s ease-in-out'
         }}
       >
@@ -183,7 +193,7 @@ const ParticipantTile = ({
             ref={videoRef}
             autoPlay
             playsInline
-            muted
+            muted={!isAudioOn}
             className={cn(
               "w-full h-full",
               isScreenShare ? "object-contain" : "object-cover"
