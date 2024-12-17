@@ -29,25 +29,31 @@ const ParticipantTile = ({
   const audioRef = useRef<HTMLAudioElement>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
 
+  // Handle video stream
   useEffect(() => {
     if (stream && videoRef.current) {
       videoRef.current.srcObject = stream;
       const videoTracks = stream.getVideoTracks();
-      videoTracks.forEach(track => {
-        track.enabled = isVideoOn;
-      });
-      console.log('Video stream attached and enabled state set to:', isVideoOn);
+      if (videoTracks.length > 0) {
+        videoTracks.forEach(track => {
+          track.enabled = isVideoOn;
+          console.log(`Video track ${track.label} enabled:`, isVideoOn);
+        });
+      }
     }
   }, [stream, isVideoOn]);
 
+  // Handle audio stream
   useEffect(() => {
     if (stream && audioRef.current) {
       audioRef.current.srcObject = stream;
       const audioTracks = stream.getAudioTracks();
-      audioTracks.forEach(track => {
-        track.enabled = isAudioOn;
-      });
-      console.log('Audio stream attached and enabled state set to:', isAudioOn);
+      if (audioTracks.length > 0) {
+        audioTracks.forEach(track => {
+          track.enabled = isAudioOn;
+          console.log(`Audio track ${track.label} enabled:`, isAudioOn);
+        });
+      }
     }
   }, [stream, isAudioOn]);
 
@@ -165,9 +171,28 @@ const ParticipantTile = ({
         className
       )}
       draggable
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
+      onDragStart={(e) => {
+        setIsDragging(true);
+        const rect = tileRef.current?.getBoundingClientRect();
+        if (rect) {
+          dragStartPos.current = {
+            x: e.clientX - rect.left,
+            y: e.clientY - rect.top
+          };
+        }
+        e.dataTransfer.setData('text/plain', '');
+      }}
+      onDrag={(e) => {
+        if (!e.clientX || !e.clientY) return;
+        setPosition({
+          x: e.clientX - dragStartPos.current.x,
+          y: e.clientY - dragStartPos.current.y
+        });
+      }}
+      onDragEnd={() => {
+        setIsDragging(false);
+        console.log('Participant moved to:', position);
+      }}
       style={{
         position: 'absolute',
         left: `${position.x}px`,
@@ -188,7 +213,7 @@ const ParticipantTile = ({
           transition: 'all 0.3s ease-in-out'
         }}
       >
-        {(isVideoOn || isScreenShare) && stream ? (
+        {stream && (isVideoOn || isScreenShare) ? (
           <video
             ref={videoRef}
             autoPlay

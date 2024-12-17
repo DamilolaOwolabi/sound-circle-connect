@@ -17,14 +17,7 @@ export const useMediaStream = () => {
           video: true,
         });
         
-        mediaStream.getAudioTracks().forEach(track => {
-          track.enabled = isAudioOn;
-        });
-        mediaStream.getVideoTracks().forEach(track => {
-          track.enabled = isVideoOn;
-        });
-        
-        console.log('Media stream obtained successfully');
+        console.log('Initial media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
         setStream(mediaStream);
       } catch (error) {
         console.error('Error accessing media devices:', error);
@@ -56,22 +49,24 @@ export const useMediaStream = () => {
   const toggleAudio = () => {
     if (stream) {
       const audioTracks = stream.getAudioTracks();
+      const newState = !isAudioOn;
       audioTracks.forEach(track => {
-        track.enabled = !isAudioOn;
-        console.log(`Audio track ${track.label} enabled: ${!isAudioOn}`);
+        track.enabled = newState;
+        console.log(`Audio track ${track.label} enabled:`, newState);
       });
-      setIsAudioOn(!isAudioOn);
+      setIsAudioOn(newState);
     }
   };
 
   const toggleVideo = () => {
     if (stream) {
       const videoTracks = stream.getVideoTracks();
+      const newState = !isVideoOn;
       videoTracks.forEach(track => {
-        track.enabled = !isVideoOn;
-        console.log(`Video track ${track.label} enabled: ${!isVideoOn}`);
+        track.enabled = newState;
+        console.log(`Video track ${track.label} enabled:`, newState);
       });
-      setIsVideoOn(!isVideoOn);
+      setIsVideoOn(newState);
     }
   };
 
