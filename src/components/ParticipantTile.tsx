@@ -170,11 +170,11 @@ const ParticipantTile = ({
       <div 
         className={cn(
           "overflow-hidden bg-muted relative",
-          isScreenShare ? "w-full h-full rounded-lg" : "w-24 h-24 rounded-full"
+          isScreenShare ? "w-full h-full rounded-lg" : "rounded-full"
         )}
         style={{
-          width: isScreenShare ? '100%' : `${radiusSize}px`,
-          height: isScreenShare ? '100%' : `${radiusSize}px`,
+          width: isScreenShare ? '100%' : `${radiusSize * 2}px`,  // Doubled the size
+          height: isScreenShare ? '100%' : `${radiusSize * 2}px`, // Doubled the size
           transition: 'all 0.3s ease-in-out'
         }}
       >
@@ -192,7 +192,7 @@ const ParticipantTile = ({
           />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
-            <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center text-lg font-semibold">
+            <div className="w-24 h-24 rounded-full bg-secondary/20 flex items-center justify-center text-2xl font-semibold">
               {name.charAt(0).toUpperCase()}
             </div>
           </div>
