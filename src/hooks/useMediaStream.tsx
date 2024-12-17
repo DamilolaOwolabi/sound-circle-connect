@@ -14,8 +14,13 @@ export const useMediaStream = () => {
       try {
         const mediaStream = await navigator.mediaDevices.getUserMedia({
           audio: true,
-          video: true,
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+          }
         });
+        
+        console.log('Initial media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
         
         // Initialize tracks with default states
         mediaStream.getAudioTracks().forEach(track => {
@@ -28,7 +33,6 @@ export const useMediaStream = () => {
           console.log(`Initial video track ${track.label} enabled:`, isVideoOn);
         });
         
-        console.log('Initial media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
         setStream(mediaStream);
       } catch (error) {
         console.error('Error accessing media devices:', error);
