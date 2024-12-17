@@ -17,6 +17,17 @@ export const useMediaStream = () => {
           video: true,
         });
         
+        // Initialize tracks with default states
+        mediaStream.getAudioTracks().forEach(track => {
+          track.enabled = isAudioOn;
+          console.log(`Initial audio track ${track.label} enabled:`, isAudioOn);
+        });
+        
+        mediaStream.getVideoTracks().forEach(track => {
+          track.enabled = isVideoOn;
+          console.log(`Initial video track ${track.label} enabled:`, isVideoOn);
+        });
+        
         console.log('Initial media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
         setStream(mediaStream);
       } catch (error) {

@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Video, VideoOff, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import VideoDisplay from './VideoDisplay';
+import AudioStream from './AudioStream';
 
 interface ParticipantTileProps {
   name: string;
@@ -25,37 +27,7 @@ const ParticipantTile = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isInRange, setIsInRange] = useState(false);
   const tileRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const audioRef = useRef<HTMLAudioElement>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
-
-  // Handle video stream
-  useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
-      const videoTracks = stream.getVideoTracks();
-      if (videoTracks.length > 0) {
-        videoTracks.forEach(track => {
-          track.enabled = isVideoOn;
-          console.log(`Video track ${track.label} enabled:`, isVideoOn);
-        });
-      }
-    }
-  }, [stream, isVideoOn]);
-
-  // Handle audio stream
-  useEffect(() => {
-    if (stream && audioRef.current) {
-      audioRef.current.srcObject = stream;
-      const audioTracks = stream.getAudioTracks();
-      if (audioTracks.length > 0) {
-        audioTracks.forEach(track => {
-          track.enabled = isAudioOn;
-          console.log(`Audio track ${track.label} enabled:`, isAudioOn);
-        });
-      }
-    }
-  }, [stream, isAudioOn]);
 
   useEffect(() => {
     console.log('Background updated for', name, ':', background);
@@ -115,23 +87,13 @@ const ParticipantTile = ({
           Math.pow(center2.x - center1.x, 2) + Math.pow(center2.y - center1.y, 2)
         );
 
-        const isIntersecting = distance < (radiusSize * 2);
-        
-        if (isIntersecting) {
+        if (distance < (radiusSize * 2)) {
           hasIntersection = true;
-          currentTile.classList.add('radius-intersecting');
-          tile.classList.add('radius-intersecting');
           console.log(`${name}'s radius is intersecting with another participant`);
-        } else {
-          currentTile.classList.remove('radius-intersecting');
-          tile.classList.remove('radius-intersecting');
         }
       });
 
       setIsInRange(hasIntersection);
-      if (audioRef.current) {
-        audioRef.current.volume = hasIntersection ? 1 : 0;
-      }
     };
 
     checkRadiusIntersection();
@@ -160,8 +122,6 @@ const ParticipantTile = ({
     return {};
   };
 
-  const videoStyle = getBackgroundStyle();
-
   return (
     <div
       ref={tileRef}
@@ -171,28 +131,9 @@ const ParticipantTile = ({
         className
       )}
       draggable
-      onDragStart={(e) => {
-        setIsDragging(true);
-        const rect = tileRef.current?.getBoundingClientRect();
-        if (rect) {
-          dragStartPos.current = {
-            x: e.clientX - rect.left,
-            y: e.clientY - rect.top
-          };
-        }
-        e.dataTransfer.setData('text/plain', '');
-      }}
-      onDrag={(e) => {
-        if (!e.clientX || !e.clientY) return;
-        setPosition({
-          x: e.clientX - dragStartPos.current.x,
-          y: e.clientY - dragStartPos.current.y
-        });
-      }}
-      onDragEnd={() => {
-        setIsDragging(false);
-        console.log('Participant moved to:', position);
-      }}
+      onDragStart={handleDragStart}
+      onDrag={handleDrag}
+      onDragEnd={handleDragEnd}
       style={{
         position: 'absolute',
         left: `${position.x}px`,
@@ -213,37 +154,34 @@ const ParticipantTile = ({
           transition: 'all 0.3s ease-in-out'
         }}
       >
-        {stream && (isVideoOn || isScreenShare) ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted={!isAudioOn}
-            className={cn(
-              "w-full h-full",
-              isScreenShare ? "object-contain" : "object-cover"
-            )}
-            style={videoStyle}
-          />
-        ) : (
+        <VideoDisplay 
+          stream={stream}
+          isVideoOn={isVideoOn}
+          isScreenShare={isScreenShare}
+          isAudioOn={isAudioOn}
+          videoStyle={getBackgroundStyle()}
+        />
+        
+        {(!stream || (!isVideoOn && !isScreenShare)) && (
           <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
             <div className="w-24 h-24 rounded-full bg-secondary/20 flex items-center justify-center text-2xl font-semibold">
               {name.charAt(0).toUpperCase()}
             </div>
           </div>
         )}
-        {stream && (
-          <audio
-            ref={audioRef}
-            autoPlay
-            playsInline
-          />
-        )}
+
+        <AudioStream 
+          stream={stream}
+          isAudioOn={isAudioOn}
+          volume={isInRange ? 1 : 0}
+        />
+
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 rounded-full px-2 py-1">
           {isAudioOn ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3 text-destructive" />}
           {isVideoOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
           {isScreenShare && <Monitor className="w-3 h-3" />}
         </div>
+        
         {!isScreenShare && (
           <div 
             className="absolute inset-0 pointer-events-none participant-radius"
