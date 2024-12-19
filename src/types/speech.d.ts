@@ -1,4 +1,4 @@
-interface SpeechRecognition extends EventTarget {
+export interface SpeechRecognition extends EventTarget {
   continuous: boolean;
   interimResults: boolean;
   lang: string;
@@ -9,7 +9,7 @@ interface SpeechRecognition extends EventTarget {
   onresult: ((this: SpeechRecognition, ev: SpeechRecognitionEvent) => any) | null;
 }
 
-interface SpeechRecognitionConstructor {
+export interface SpeechRecognitionConstructor {
   new (): SpeechRecognition;
 }
 
