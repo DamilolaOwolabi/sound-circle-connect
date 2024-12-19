@@ -4,6 +4,7 @@ import Controls from '@/components/Controls';
 import ParticipantsList from '@/components/ParticipantsList';
 import ParticipantsGrid from '@/components/ParticipantsGrid';
 import RadiusControl from '@/components/RadiusControl';
+import AIFeatures from '@/components/AIFeatures';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
@@ -127,6 +128,7 @@ const Meeting = () => {
             minRadius={MIN_RADIUS}
             maxRadius={MAX_RADIUS}
           />
+          <AIFeatures stream={stream} />
         </div>
       </div>
       <Controls
