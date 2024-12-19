@@ -12,7 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Share } from 'lucide-react';
 
 const MIN_RADIUS = 30;
-const MAX_RADIUS = 200;
+// Using Math.min to ensure the radius doesn't exceed screen dimensions
+const MAX_RADIUS = Math.min(window.innerWidth, window.innerHeight) / 2;
 
 const MOCK_PARTICIPANTS = [
   { id: '2', name: 'John Doe', isAudioOn: true, isVideoOn: false, radiusSize: 70 },
@@ -23,11 +24,27 @@ const MOCK_PARTICIPANTS = [
 const Meeting = () => {
   const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
   const [radiusSize, setRadiusSize] = useState(50);
+  const [maxRadius, setMaxRadius] = useState(MAX_RADIUS);
   const [background, setBackground] = useState<{ id: string; url?: string; type?: string } | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const isHost = location.state?.isHost;
   const [meetingId] = useState(() => location.state?.meetingId || crypto.randomUUID());
+
+  // Update maxRadius when window is resized
+  useEffect(() => {
+    const handleResize = () => {
+      const newMaxRadius = Math.min(window.innerWidth, window.innerHeight) / 2;
+      setMaxRadius(newMaxRadius);
+      // Adjust current radius if it exceeds new max
+      if (radiusSize > newMaxRadius) {
+        setRadiusSize(newMaxRadius);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [radiusSize]);
 
   const {
     stream,
@@ -126,7 +143,7 @@ const Meeting = () => {
             radiusSize={radiusSize}
             onRadiusChange={handleRadiusChange}
             minRadius={MIN_RADIUS}
-            maxRadius={MAX_RADIUS}
+            maxRadius={maxRadius}
           />
           <AIFeatures stream={stream} />
         </div>
