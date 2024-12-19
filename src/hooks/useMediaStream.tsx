@@ -7,43 +7,53 @@ export const useMediaStream = () => {
   const [isAudioOn, setIsAudioOn] = useState(true);
   const [isVideoOn, setIsVideoOn] = useState(true);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("");
+  const [selectedVideoDevice, setSelectedVideoDevice] = useState<string>("");
   const { toast } = useToast();
 
-  useEffect(() => {
-    const initializeMedia = async () => {
-      try {
-        const mediaStream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: {
-            width: { ideal: 1280 },
-            height: { ideal: 720 }
-          }
-        });
-        
-        console.log('Initial media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
-        
-        // Initialize tracks with default states
-        mediaStream.getAudioTracks().forEach(track => {
-          track.enabled = isAudioOn;
-          console.log(`Initial audio track ${track.label} enabled:`, isAudioOn);
-        });
-        
-        mediaStream.getVideoTracks().forEach(track => {
-          track.enabled = isVideoOn;
-          console.log(`Initial video track ${track.label} enabled:`, isVideoOn);
-        });
-        
-        setStream(mediaStream);
-      } catch (error) {
-        console.error('Error accessing media devices:', error);
-        toast({
-          variant: "destructive",
-          title: "Media Access Error",
-          description: "Unable to access camera or microphone. Please check your permissions.",
-        });
+  const initializeMedia = async (audioDeviceId?: string, videoDeviceId?: string) => {
+    try {
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
-    };
 
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: audioDeviceId ? { deviceId: audioDeviceId } : true,
+        video: videoDeviceId ? {
+          deviceId: videoDeviceId,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } : {
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      });
+      
+      console.log('Initial media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
+      
+      // Initialize tracks with default states
+      mediaStream.getAudioTracks().forEach(track => {
+        track.enabled = isAudioOn;
+        console.log(`Initial audio track ${track.label} enabled:`, isAudioOn);
+      });
+      
+      mediaStream.getVideoTracks().forEach(track => {
+        track.enabled = isVideoOn;
+        console.log(`Initial video track ${track.label} enabled:`, isVideoOn);
+      });
+      
+      setStream(mediaStream);
+    } catch (error) {
+      console.error('Error accessing media devices:', error);
+      toast({
+        variant: "destructive",
+        title: "Media Access Error",
+        description: "Unable to access camera or microphone. Please check your permissions.",
+      });
+    }
+  };
+
+  useEffect(() => {
     initializeMedia();
 
     return () => {
@@ -60,6 +70,16 @@ export const useMediaStream = () => {
       }
     };
   }, []);
+
+  const handleDeviceChange = async (audioDeviceId: string, videoDeviceId: string) => {
+    setSelectedAudioDevice(audioDeviceId);
+    setSelectedVideoDevice(videoDeviceId);
+    await initializeMedia(audioDeviceId, videoDeviceId);
+    toast({
+      title: "Settings Updated",
+      description: "Your audio and video devices have been updated.",
+    });
+  };
 
   const toggleAudio = () => {
     if (stream) {
@@ -126,5 +146,6 @@ export const useMediaStream = () => {
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
+    handleDeviceChange,
   };
 };

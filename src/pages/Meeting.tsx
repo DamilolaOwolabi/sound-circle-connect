@@ -33,6 +33,7 @@ const Meeting = () => {
     toggleAudio,
     toggleVideo,
     toggleScreenShare,
+    handleDeviceChange,
   } = useMediaStream();
 
   const { isRecording, toggleRecording } = useRecording(stream);
@@ -92,12 +93,14 @@ const Meeting = () => {
         isRecording={isRecording}
         isScreenSharing={isScreenSharing}
         layout={layout}
+        stream={stream}
         onToggleAudio={toggleAudio}
         onToggleVideo={toggleVideo}
         onToggleScreenShare={toggleScreenShare}
         onToggleRecording={toggleRecording}
         onToggleLayout={toggleLayout}
         onSelectBackground={handleBackgroundSelect}
+        onDeviceChange={handleDeviceChange}
         onLeave={() => console.log('Leave meeting')}
       />
     </div>

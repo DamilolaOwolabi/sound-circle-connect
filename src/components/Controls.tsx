@@ -13,6 +13,7 @@ import {
   Square 
 } from 'lucide-react';
 import BackgroundSelector from './BackgroundSelector';
+import VideoSettings from './VideoSettings';
 
 interface ControlsProps {
   isAudioOn: boolean;
@@ -20,12 +21,14 @@ interface ControlsProps {
   isRecording: boolean;
   isScreenSharing: boolean;
   layout: 'grid' | 'spotlight';
+  stream: MediaStream | null;
   onToggleAudio: () => void;
   onToggleVideo: () => void;
   onToggleScreenShare: () => void;
   onToggleRecording: () => void;
   onToggleLayout: () => void;
   onSelectBackground: (background: { id: string; url?: string; type?: string }) => void;
+  onDeviceChange: (audioDeviceId: string, videoDeviceId: string) => void;
   onLeave: () => void;
 }
 
@@ -35,12 +38,14 @@ const Controls = ({
   isRecording,
   isScreenSharing,
   layout,
+  stream,
   onToggleAudio,
   onToggleVideo,
   onToggleScreenShare,
   onToggleRecording,
   onToggleLayout,
   onSelectBackground,
+  onDeviceChange,
   onLeave
 }: ControlsProps) => {
   return (
@@ -74,6 +79,7 @@ const Controls = ({
         {isRecording ? <Square className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
       </Button>
       <BackgroundSelector onSelectBackground={onSelectBackground} />
+      <VideoSettings stream={stream} onDeviceChange={onDeviceChange} />
       <Button
         variant="outline"
         size="icon"
