@@ -1,3 +1,6 @@
+// Import the type definitions from our speech.d.ts file
+import type { SpeechRecognition } from '@/types/speech';
+
 export class SpeechRecognitionService {
   private recognition: SpeechRecognition | null = null;
   private isListening: boolean = false;
