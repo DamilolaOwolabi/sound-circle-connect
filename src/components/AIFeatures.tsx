@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Brain, MessageSquare } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
+import { SpeechRecognitionService } from '@/utils/speechUtils';
 
 interface AIFeaturesProps {
   stream: MediaStream | null;
@@ -11,6 +12,19 @@ interface AIFeaturesProps {
 const AIFeatures = ({ stream }: AIFeaturesProps) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState<string[]>([]);
+  const speechServiceRef = useRef<SpeechRecognitionService | null>(null);
+
+  useEffect(() => {
+    speechServiceRef.current = new SpeechRecognitionService((text) => {
+      setTranscript(prev => [...prev, text]);
+    });
+
+    return () => {
+      if (speechServiceRef.current) {
+        speechServiceRef.current.stop();
+      }
+    };
+  }, []);
 
   const startTranscription = async () => {
     if (!stream) {
@@ -24,7 +38,7 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
 
     try {
       setIsTranscribing(true);
-      // Here we'll implement real-time transcription
+      speechServiceRef.current?.start();
       console.log('Starting AI transcription...');
       toast({
         title: "AI Transcription Started",
@@ -41,6 +55,7 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
   };
 
   const stopTranscription = () => {
+    speechServiceRef.current?.stop();
     setIsTranscribing(false);
     console.log('Stopping AI transcription...');
     toast({
@@ -65,7 +80,11 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
         title: "Generating Summary",
         description: "AI is analyzing your meeting transcript...",
       });
-      // Here we'll implement summary generation
+
+      // Here we'll need to integrate with OpenAI for summary generation
+      // For now, we'll show a placeholder message
+      setTranscript(prev => [...prev, "\n=== Meeting Summary ===\nKey points discussed during the meeting..."]);
+      
     } catch (error) {
       console.error('Summary generation error:', error);
       toast({
@@ -106,7 +125,7 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
       <ScrollArea className="h-[200px] rounded-md border p-2">
         <div className="space-y-2">
           {transcript.map((text, index) => (
-            <p key={index} className="text-sm">{text}</p>
+            <p key={index} className="text-sm whitespace-pre-wrap">{text}</p>
           ))}
           {transcript.length === 0 && (
             <p className="text-sm text-muted-foreground text-center">
