@@ -106,8 +106,8 @@ const ParticipantTile = ({
 
     if (background.type === 'blur') {
       return {
-        filter: 'blur(8px)',
-        transform: 'scale(1.1)'
+        backdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(255, 255, 255, 0.1)'
       };
     }
 
@@ -140,7 +140,8 @@ const ParticipantTile = ({
         top: `${position.y}px`,
         transform: `translate(${isDragging ? '-4px, -4px' : '0, 0'})`,
         transition: isDragging ? 'none' : 'transform 0.2s ease-out',
-        zIndex: isDragging ? 10 : 1
+        zIndex: isDragging ? 10 : 1,
+        ...getBackgroundStyle()
       }}
     >
       <div 
@@ -159,7 +160,6 @@ const ParticipantTile = ({
           isVideoOn={isVideoOn}
           isScreenShare={isScreenShare}
           isAudioOn={isAudioOn}
-          videoStyle={getBackgroundStyle()}
         />
         
         {(!stream || (!isVideoOn && !isScreenShare)) && (
