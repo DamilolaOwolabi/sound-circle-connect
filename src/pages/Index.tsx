@@ -33,11 +33,14 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-2xl space-y-8">
-        {/* Header */}
+        {/* Header with Logo */}
         <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3">
-            <h1 className="text-4xl font-bold text-primary">Sound Radius</h1>
-            <RadiusIcon />
+          <div className="flex flex-col items-center justify-center gap-3">
+            <img 
+              src="/lovable-uploads/c00aba7d-50a8-4993-83f8-139b74804439.png" 
+              alt="SoundRadius Logo" 
+              className="w-48 h-auto mb-4"
+            />
           </div>
           <p className="text-muted-foreground">
             Connect and collaborate with natural, spatial audio conversations
@@ -48,7 +51,7 @@ const Index = () => {
         <div className="grid gap-4 md:grid-cols-2">
           <Button 
             size="lg" 
-            className="h-24 text-lg"
+            className="h-24 text-lg bg-[#9b87f5] hover:bg-[#8b77e5]"
             onClick={handleHostMeeting}
           >
             <Video className="mr-2 h-5 w-5" />
@@ -56,7 +59,7 @@ const Index = () => {
           </Button>
           <Button 
             size="lg" 
-            className="h-24 text-lg"
+            className="h-24 text-lg bg-[#D946EF] hover:bg-[#C936DF]"
             variant="secondary"
             onClick={handleJoinMeeting}
           >

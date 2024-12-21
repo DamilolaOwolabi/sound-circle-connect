@@ -11,8 +11,8 @@ import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Share } from 'lucide-react';
 
+// Constants
 const MIN_RADIUS = 30;
-// Using Math.min to ensure the radius doesn't exceed screen dimensions
 const MAX_RADIUS = Math.min(window.innerWidth, window.innerHeight) / 2;
 
 const MOCK_PARTICIPANTS = [
@@ -112,7 +112,14 @@ const Meeting = () => {
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Meeting Room</h1>
+        <div className="flex items-center gap-4">
+          <img 
+            src="/lovable-uploads/c00aba7d-50a8-4993-83f8-139b74804439.png" 
+            alt="SoundRadius Logo" 
+            className="h-8 w-auto"
+          />
+          <h1 className="text-2xl font-bold text-primary">Meeting Room</h1>
+        </div>
         {isHost && (
           <Button
             variant="outline"
