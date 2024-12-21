@@ -178,7 +178,7 @@ const ParticipantTile = ({
 
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 rounded-full px-2 py-1">
           {isAudioOn ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3 text-destructive" />}
-          {isVideoOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
+          {isVideoOn ? <VideoIcon className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
           {isScreenShare && <Monitor className="w-3 h-3" />}
         </div>
         
@@ -186,7 +186,9 @@ const ParticipantTile = ({
           <div 
             className="absolute inset-0 pointer-events-none participant-radius"
             style={{
-              background: `radial-gradient(circle at center, transparent, ${isInRange ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)'})`
+              background: `radial-gradient(circle at center, transparent ${radiusSize * 0.5}px, ${isInRange ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)'} ${radiusSize}px)`,
+              backdropFilter: isInRange ? 'blur(4px)' : 'blur(2px)',
+              transition: 'all 0.3s ease-in-out'
             }}
           />
         )}

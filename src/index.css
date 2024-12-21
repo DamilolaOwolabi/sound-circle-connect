@@ -38,34 +38,40 @@
 
 .participant-radius {
   transition: all 0.3s ease-in-out;
-  animation: pulse 2s infinite;
+  animation: pulse 3s infinite;
 }
 
 .radius-intersecting .participant-radius {
   @apply border-primary;
-  animation: intersect-pulse 1s infinite;
+  animation: intersect-pulse 1.5s infinite;
 }
 
 @keyframes pulse {
   0% {
-    opacity: 0.5;
+    opacity: 0.6;
+    backdrop-filter: blur(2px);
   }
   50% {
-    opacity: 0.3;
+    opacity: 0.4;
+    backdrop-filter: blur(3px);
   }
   100% {
-    opacity: 0.5;
+    opacity: 0.6;
+    backdrop-filter: blur(2px);
   }
 }
 
 @keyframes intersect-pulse {
   0% {
     opacity: 0.8;
+    backdrop-filter: blur(4px);
   }
   50% {
     opacity: 0.6;
+    backdrop-filter: blur(6px);
   }
   100% {
     opacity: 0.8;
+    backdrop-filter: blur(4px);
   }
 }
