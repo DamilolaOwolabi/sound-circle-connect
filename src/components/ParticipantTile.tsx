@@ -178,7 +178,7 @@ const ParticipantTile = ({
 
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 rounded-full px-2 py-1">
           {isAudioOn ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3 text-destructive" />}
-          {isVideoOn ? <VideoIcon className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
+          {isVideoOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
           {isScreenShare && <Monitor className="w-3 h-3" />}
         </div>
         
