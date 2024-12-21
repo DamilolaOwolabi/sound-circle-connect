@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Video, Users, MessageCircle } from "lucide-react";
+import { Settings, Video, Users } from "lucide-react";
 import RadiusIcon from '@/components/RadiusIcon';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
@@ -33,10 +33,14 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-2xl space-y-8">
-        {/* Header with Icon */}
+        {/* Header with Logo */}
         <div className="text-center space-y-4">
           <div className="flex flex-col items-center justify-center gap-3">
-            <MessageCircle className="w-16 h-16 text-primary" />
+            <img 
+              src="/lovable-uploads/758f24e3-2762-41b6-bdb1-c661c8986bdf.png" 
+              alt="SoundRadius Logo" 
+              className="w-48 h-auto mb-4"
+            />
             <h1 className="text-4xl font-bold text-primary">Sound Radius</h1>
           </div>
           <p className="text-muted-foreground">

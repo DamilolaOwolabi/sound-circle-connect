@@ -113,7 +113,11 @@ const Meeting = () => {
     <div className="min-h-screen bg-background p-6">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-4">
-          <MessageCircle className="h-8 w-8 text-primary" />
+          <img 
+            src="/lovable-uploads/758f24e3-2762-41b6-bdb1-c661c8986bdf.png" 
+            alt="SoundRadius Logo" 
+            className="h-8 w-auto"
+          />
           <h1 className="text-2xl font-bold text-primary">Meeting Room</h1>
         </div>
         {isHost && (
