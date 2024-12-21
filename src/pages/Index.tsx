@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Video, Users } from "lucide-react";
+import { Settings, Video, Users, MessageCircle } from "lucide-react";
 import RadiusIcon from '@/components/RadiusIcon';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
@@ -33,14 +33,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="w-full max-w-2xl space-y-8">
-        {/* Header with Logo */}
+        {/* Header with Icon */}
         <div className="text-center space-y-4">
           <div className="flex flex-col items-center justify-center gap-3">
-            <img 
-              src="/lovable-uploads/c00aba7d-50a8-4993-83f8-139b74804439.png" 
-              alt="SoundRadius Logo" 
-              className="w-48 h-auto mb-4"
-            />
+            <MessageCircle className="w-16 h-16 text-primary" />
+            <h1 className="text-4xl font-bold text-primary">Sound Radius</h1>
           </div>
           <p className="text-muted-foreground">
             Connect and collaborate with natural, spatial audio conversations

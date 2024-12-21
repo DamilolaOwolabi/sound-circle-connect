@@ -9,7 +9,7 @@ import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Share } from 'lucide-react';
+import { Share, MessageCircle } from 'lucide-react';
 
 // Constants
 const MIN_RADIUS = 30;
@@ -113,11 +113,7 @@ const Meeting = () => {
     <div className="min-h-screen bg-background p-6">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-4">
-          <img 
-            src="/lovable-uploads/c00aba7d-50a8-4993-83f8-139b74804439.png" 
-            alt="SoundRadius Logo" 
-            className="h-8 w-auto"
-          />
+          <MessageCircle className="h-8 w-8 text-primary" />
           <h1 className="text-2xl font-bold text-primary">Meeting Room</h1>
         </div>
         {isHost && (
