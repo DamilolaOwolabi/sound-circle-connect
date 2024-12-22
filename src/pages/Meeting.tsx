@@ -5,7 +5,6 @@ import ParticipantsList from '@/components/ParticipantsList';
 import ParticipantsGrid from '@/components/ParticipantsGrid';
 import RadiusControl from '@/components/RadiusControl';
 import AIFeatures from '@/components/AIFeatures';
-import ChatPanel from '@/components/ChatPanel';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
@@ -27,12 +26,12 @@ const Meeting = () => {
   const [radiusSize, setRadiusSize] = useState(50);
   const [maxRadius, setMaxRadius] = useState(MAX_RADIUS);
   const [background, setBackground] = useState<{ id: string; url?: string; type?: string } | null>(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const isHost = location.state?.isHost;
   const [meetingId] = useState(() => location.state?.meetingId || crypto.randomUUID());
 
-  // Update maxRadius when window is resized
   useEffect(() => {
     const handleResize = () => {
       const newMaxRadius = Math.min(window.innerWidth, window.innerHeight) / 2;
@@ -153,7 +152,6 @@ const Meeting = () => {
             minRadius={MIN_RADIUS}
             maxRadius={maxRadius}
           />
-          <ChatPanel participants={[...MOCK_PARTICIPANTS, { id: 'local', name: 'You' }]} />
           <AIFeatures stream={stream} />
         </div>
       </div>

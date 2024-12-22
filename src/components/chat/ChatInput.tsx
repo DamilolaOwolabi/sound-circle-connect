@@ -10,7 +10,8 @@ import {
 import { Grid } from '@giphy/react-components';
 import { GiphyFetch } from '@giphy/js-fetch-api';
 
-const gf = new GiphyFetch('pVF7yJTqxIoHwwTDTFHbIcnKNcnmmY8O');
+// Using a public GIPHY API key for development
+const gf = new GiphyFetch('GlVGYHkr3WSBnllca54iNt0yFbjz7L65');
 
 const MEMES = [
   { url: '/lovable-uploads/c00aba7d-50a8-4993-83f8-139b74804439.png', alt: 'Meme 1' },
