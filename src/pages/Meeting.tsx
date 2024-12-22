@@ -114,7 +114,7 @@ const Meeting = () => {
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-4">
           <img 
-            src="/lovable-uploads/758f24e3-2762-41b6-bdb1-c661c8986bdf.png" 
+            src="/lovable-uploads/efac273c-f666-48c6-aa08-e42558a7b939.png" 
             alt="SoundRadius Logo" 
             className="h-8 w-auto"
           />

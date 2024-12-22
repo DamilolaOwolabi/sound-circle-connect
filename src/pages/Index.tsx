@@ -37,7 +37,7 @@ const Index = () => {
         <div className="text-center space-y-4">
           <div className="flex flex-col items-center justify-center gap-3">
             <img 
-              src="/lovable-uploads/758f24e3-2762-41b6-bdb1-c661c8986bdf.png" 
+              src="/lovable-uploads/efac273c-f666-48c6-aa08-e42558a7b939.png" 
               alt="SoundRadius Logo" 
               className="w-48 h-auto mb-4"
             />
