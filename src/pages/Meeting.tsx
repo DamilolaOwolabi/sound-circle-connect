@@ -5,11 +5,12 @@ import ParticipantsList from '@/components/ParticipantsList';
 import ParticipantsGrid from '@/components/ParticipantsGrid';
 import RadiusControl from '@/components/RadiusControl';
 import AIFeatures from '@/components/AIFeatures';
+import ChatPanel from '@/components/ChatPanel';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Share, MessageCircle } from 'lucide-react';
+import { Share } from 'lucide-react';
 
 // Constants
 const MIN_RADIUS = 30;
@@ -152,6 +153,7 @@ const Meeting = () => {
             minRadius={MIN_RADIUS}
             maxRadius={maxRadius}
           />
+          <ChatPanel participants={[...MOCK_PARTICIPANTS, { id: 'local', name: 'You' }]} />
           <AIFeatures stream={stream} />
         </div>
       </div>
