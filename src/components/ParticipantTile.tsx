@@ -101,32 +101,11 @@ const ParticipantTile = ({
 
   const isScreenShare = stream?.getVideoTracks().some(track => track.label.includes('screen'));
 
-  const getBackgroundStyle = () => {
-    if (!background) return {};
-
-    if (background.type === 'blur') {
-      return {
-        backdropFilter: 'blur(8px)',
-        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-      };
-    }
-
-    if (background.url) {
-      return {
-        backgroundImage: `url(${background.url})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center'
-      };
-    }
-
-    return {};
-  };
-
   return (
     <div
       ref={tileRef}
       className={cn(
-        "participant-tile relative cursor-move",
+        "participant-tile relative cursor-move p-1",
         isDragging && "opacity-75",
         className
       )}
