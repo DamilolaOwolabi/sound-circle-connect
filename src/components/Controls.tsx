@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
   Mic, 
@@ -10,10 +10,12 @@ import {
   Grid, 
   Maximize2,
   Circle,
-  Square 
+  Square,
+  MessageCircle 
 } from 'lucide-react';
 import BackgroundSelector from './BackgroundSelector';
 import VideoSettings from './VideoSettings';
+import ChatPanel from './ChatPanel';
 
 interface ControlsProps {
   isAudioOn: boolean;
@@ -48,49 +50,66 @@ const Controls = ({
   onDeviceChange,
   onLeave
 }: ControlsProps) => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+
   return (
-    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-background/95 backdrop-blur-sm p-4 rounded-full shadow-lg">
-      <Button
-        variant={isAudioOn ? "outline" : "destructive"}
-        size="icon"
-        onClick={onToggleAudio}
-      >
-        {isAudioOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-      </Button>
-      <Button
-        variant={isVideoOn ? "outline" : "destructive"}
-        size="icon"
-        onClick={onToggleVideo}
-      >
-        {isVideoOn ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-      </Button>
-      <Button
-        variant={isScreenSharing ? "secondary" : "outline"}
-        size="icon"
-        onClick={onToggleScreenShare}
-      >
-        <Monitor className="w-4 h-4" />
-      </Button>
-      <Button
-        variant={isRecording ? "destructive" : "outline"}
-        size="icon"
-        onClick={onToggleRecording}
-      >
-        {isRecording ? <Square className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
-      </Button>
-      <BackgroundSelector onSelectBackground={onSelectBackground} />
-      <VideoSettings stream={stream} onDeviceChange={onDeviceChange} />
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={onToggleLayout}
-      >
-        {layout === 'grid' ? <Maximize2 className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
-      </Button>
-      <Button variant="destructive" size="icon" onClick={onLeave}>
-        <PhoneOff className="w-4 h-4" />
-      </Button>
-    </div>
+    <>
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-background/95 backdrop-blur-sm p-4 rounded-full shadow-lg">
+        <Button
+          variant={isAudioOn ? "outline" : "destructive"}
+          size="icon"
+          onClick={onToggleAudio}
+        >
+          {isAudioOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+        </Button>
+        <Button
+          variant={isVideoOn ? "outline" : "destructive"}
+          size="icon"
+          onClick={onToggleVideo}
+        >
+          {isVideoOn ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+        </Button>
+        <Button
+          variant={isScreenSharing ? "secondary" : "outline"}
+          size="icon"
+          onClick={onToggleScreenShare}
+        >
+          <Monitor className="w-4 h-4" />
+        </Button>
+        <Button
+          variant={isRecording ? "destructive" : "outline"}
+          size="icon"
+          onClick={onToggleRecording}
+        >
+          {isRecording ? <Square className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
+        </Button>
+        <BackgroundSelector onSelectBackground={onSelectBackground} />
+        <VideoSettings stream={stream} onDeviceChange={onDeviceChange} />
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onToggleLayout}
+        >
+          {layout === 'grid' ? <Maximize2 className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => setIsChatOpen(true)}
+        >
+          <MessageCircle className="w-4 h-4" />
+        </Button>
+        <Button variant="destructive" size="icon" onClick={onLeave}>
+          <PhoneOff className="w-4 h-4" />
+        </Button>
+      </div>
+
+      <ChatPanel 
+        participants={[{ id: 'local', name: 'You' }]} 
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
+    </>
   );
 };
 
