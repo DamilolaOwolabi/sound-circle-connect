@@ -141,7 +141,6 @@ const ParticipantTile = ({
         transform: `translate(${isDragging ? '-4px, -4px' : '0, 0'})`,
         transition: isDragging ? 'none' : 'transform 0.2s ease-out',
         zIndex: isDragging ? 10 : 1,
-        ...getBackgroundStyle()
       }}
     >
       <div 
@@ -160,6 +159,7 @@ const ParticipantTile = ({
           isVideoOn={isVideoOn}
           isScreenShare={isScreenShare}
           isAudioOn={isAudioOn}
+          background={background}
         />
         
         {(!stream || (!isVideoOn && !isScreenShare)) && (
