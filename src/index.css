@@ -127,13 +127,13 @@
     transform: translate(0);
   }
   25% {
-    transform: translate(1px, 1px);
+    transform: translate(2px, 2px);
   }
   50% {
-    transform: translate(-1px, -1px);
+    transform: translate(-2px, -2px);
   }
   75% {
-    transform: translate(-1px, 1px);
+    transform: translate(-2px, 2px);
   }
   100% {
     transform: translate(0);
@@ -141,5 +141,5 @@
 }
 
 .animate-subtle-vibrate {
-  animation: subtle-vibrate 0.15s ease-in-out infinite;
+  animation: subtle-vibrate 0.2s ease-in-out infinite;
 }

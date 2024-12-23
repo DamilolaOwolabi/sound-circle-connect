@@ -31,6 +31,7 @@ const AudioStream = ({ stream, isAudioOn, volume = 1 }: AudioStreamProps) => {
           audioContextRef.current = new AudioContext();
           analyserRef.current = audioContextRef.current.createAnalyser();
           analyserRef.current.fftSize = 256;
+          analyserRef.current.smoothingTimeConstant = 0.7;
           
           const source = audioContextRef.current.createMediaStreamSource(stream);
           source.connect(analyserRef.current);
@@ -41,10 +42,12 @@ const AudioStream = ({ stream, isAudioOn, volume = 1 }: AudioStreamProps) => {
             const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
             analyserRef.current.getByteFrequencyData(dataArray);
             
-            // Calculate average volume level
+            // Calculate average volume level with increased sensitivity
             const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-            const normalizedLevel = Math.min(average / 128, 1);
+            const normalizedLevel = Math.min(average / 100, 1); // Increased sensitivity by lowering denominator
             setAudioLevel(normalizedLevel);
+            
+            console.log('Audio level:', normalizedLevel);
             
             animationFrameRef.current = requestAnimationFrame(analyzeAudio);
           };
@@ -79,10 +82,10 @@ const AudioStream = ({ stream, isAudioOn, volume = 1 }: AudioStreamProps) => {
       <div
         className={cn(
           "absolute inset-0 rounded-full transition-transform duration-75",
-          isAudioOn && audioLevel > 0.1 && "animate-subtle-vibrate"
+          isAudioOn && audioLevel > 0.05 && "animate-subtle-vibrate" // Lowered threshold for activation
         )}
         style={{
-          transform: `scale(${1 + audioLevel * 0.05})`,
+          transform: `scale(${1 + audioLevel * 0.1})`, // Increased scale effect
         }}
       />
     </div>
