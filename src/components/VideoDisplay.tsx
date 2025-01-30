@@ -27,20 +27,23 @@ const VideoDisplay = ({
   const animationFrameRef = useRef<number>();
 
   useEffect(() => {
-    if (stream && videoRef.current) {
-      videoRef.current.srcObject = stream;
-      console.log('Setting video stream:', stream.id);
-      
-      // Ensure video tracks are properly enabled/disabled
+    if (stream) {
       const videoTracks = stream.getVideoTracks();
+      
       if (videoTracks.length > 0) {
         videoTracks.forEach(track => {
-          track.enabled = isVideoOn;
-          console.log(`Video track ${track.label} enabled:`, isVideoOn);
+          if (!isVideoOn && !isScreenShare) {
+            console.log('Stopping video track:', track.label);
+            track.stop();
+          } else if (videoRef.current) {
+            console.log('Setting video stream:', stream.id);
+            videoRef.current.srcObject = stream;
+            track.enabled = true;
+          }
         });
       }
     }
-  }, [stream, isVideoOn]);
+  }, [stream, isVideoOn, isScreenShare]);
 
   useEffect(() => {
     const processFrame = async () => {
