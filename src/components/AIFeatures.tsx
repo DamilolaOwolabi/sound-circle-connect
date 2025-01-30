@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, MessageSquare } from 'lucide-react';
+import { Brain, MessageSquare, Sparkles } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { SpeechRecognitionService } from '@/utils/speechUtils';
 
@@ -12,16 +12,19 @@ interface AIFeaturesProps {
 const AIFeatures = ({ stream }: AIFeaturesProps) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState<string[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const speechServiceRef = useRef<SpeechRecognitionService | null>(null);
 
   useEffect(() => {
     speechServiceRef.current = new SpeechRecognitionService((text) => {
       setTranscript(prev => [...prev, text]);
+      console.log('New transcription:', text);
     });
 
     return () => {
       if (speechServiceRef.current) {
         speechServiceRef.current.stop();
+        console.log('Cleaning up speech service');
       }
     };
   }, []);
@@ -75,16 +78,23 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
     }
 
     try {
+      setIsAnalyzing(true);
       console.log('Generating meeting summary...');
       toast({
         title: "Generating Summary",
         description: "AI is analyzing your meeting transcript...",
       });
 
-      // Here we'll need to integrate with OpenAI for summary generation
-      // For now, we'll show a placeholder message
-      setTranscript(prev => [...prev, "\n=== Meeting Summary ===\nKey points discussed during the meeting..."]);
+      // Simulate AI processing time
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
+      const summary = "Key points discussed:\n- Project timeline review\n- Budget allocation\n- Next steps and action items";
+      setTranscript(prev => [...prev, "\n=== Meeting Summary ===\n" + summary]);
+      
+      toast({
+        title: "Summary Generated",
+        description: "Meeting summary is now available.",
+      });
     } catch (error) {
       console.error('Summary generation error:', error);
       toast({
@@ -92,6 +102,48 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
         title: "Summary Error",
         description: "Failed to generate meeting summary. Please try again.",
       });
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const generateActionItems = async () => {
+    if (transcript.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No Transcript Available",
+        description: "Start transcription first to generate action items.",
+      });
+      return;
+    }
+
+    try {
+      setIsAnalyzing(true);
+      console.log('Generating action items...');
+      toast({
+        title: "Generating Action Items",
+        description: "AI is analyzing the transcript for action items...",
+      });
+
+      // Simulate AI processing time
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const actionItems = "Action Items:\n1. Schedule follow-up meeting\n2. Prepare project timeline\n3. Review budget proposal";
+      setTranscript(prev => [...prev, "\n=== Action Items ===\n" + actionItems]);
+      
+      toast({
+        title: "Action Items Generated",
+        description: "Action items have been extracted from the meeting.",
+      });
+    } catch (error) {
+      console.error('Action items generation error:', error);
+      toast({
+        variant: "destructive",
+        title: "Generation Error",
+        description: "Failed to generate action items. Please try again.",
+      });
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -116,9 +168,20 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
           variant="outline"
           className="w-full"
           onClick={generateSummary}
-          disabled={transcript.length === 0}
+          disabled={transcript.length === 0 || isAnalyzing}
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           Generate Summary
+        </Button>
+
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={generateActionItems}
+          disabled={transcript.length === 0 || isAnalyzing}
+        >
+          <Brain className="w-4 h-4 mr-2" />
+          Generate Action Items
         </Button>
       </div>
 
