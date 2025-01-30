@@ -12,7 +12,7 @@ interface Message {
   sender: string;
   content: string;
   timestamp: Date;
-  type: 'text' | 'gif' | 'meme';
+  type: 'text' | 'gif' | 'meme' | 'ai';
   reactions: { [key: string]: string[] };
 }
 
@@ -29,7 +29,7 @@ const ChatMessage = ({ message, onReaction }: ChatMessageProps) => {
       <div className="flex items-start gap-2">
         <div className="flex-1">
           <p className="text-sm font-medium">{message.sender}</p>
-          {message.type === 'text' ? (
+          {message.type === 'text' || message.type === 'ai' ? (
             <p className="text-sm">{message.content}</p>
           ) : (
             <img 
