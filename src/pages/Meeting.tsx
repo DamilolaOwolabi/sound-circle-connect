@@ -56,6 +56,7 @@ const Meeting = () => {
     toggleVideo,
     toggleScreenShare,
     handleDeviceChange,
+    handleQualityChange,
   } = useMediaStream();
 
   const { isRecording, toggleRecording } = useRecording(stream);
@@ -131,6 +132,7 @@ const Meeting = () => {
           </Button>
         )}
       </div>
+      
       <div className="flex gap-6">
         <ParticipantsGrid
           layout={layout}
@@ -169,6 +171,7 @@ const Meeting = () => {
         onToggleLayout={toggleLayout}
         onSelectBackground={handleBackgroundSelect}
         onDeviceChange={handleDeviceChange}
+        onQualityChange={handleQualityChange}
         onLeave={() => navigate('/')}
       />
     </div>

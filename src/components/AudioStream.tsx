@@ -13,6 +13,7 @@ const AudioStream = ({ stream, isAudioOn, volume = 1 }: AudioStreamProps) => {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const [audioLevel, setAudioLevel] = useState(0);
   const animationFrameRef = useRef<number>();
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (stream && audioRef.current) {
@@ -26,7 +27,6 @@ const AudioStream = ({ stream, isAudioOn, volume = 1 }: AudioStreamProps) => {
           console.log(`Audio track ${track.label} enabled:`, isAudioOn);
         });
 
-        // Initialize Web Audio API
         if (!audioContextRef.current) {
           audioContextRef.current = new AudioContext();
           analyserRef.current = audioContextRef.current.createAnalyser();
@@ -37,17 +37,46 @@ const AudioStream = ({ stream, isAudioOn, volume = 1 }: AudioStreamProps) => {
           source.connect(analyserRef.current);
           
           const analyzeAudio = () => {
-            if (!analyserRef.current) return;
+            if (!analyserRef.current || !canvasRef.current) return;
             
+            const ctx = canvasRef.current.getContext('2d');
+            if (!ctx) return;
+
             const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
             analyserRef.current.getByteFrequencyData(dataArray);
             
-            // Calculate average volume level with increased sensitivity
             const average = dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-            const normalizedLevel = Math.min(average / 100, 1); // Increased sensitivity by lowering denominator
+            const normalizedLevel = Math.min(average / 100, 1);
             setAudioLevel(normalizedLevel);
             
-            console.log('Audio level:', normalizedLevel);
+            // Clear canvas
+            ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+            
+            // Draw waveform
+            ctx.beginPath();
+            ctx.strokeStyle = isAudioOn ? '#22c55e' : '#ef4444';
+            ctx.lineWidth = 2;
+            
+            const sliceWidth = canvasRef.current.width / dataArray.length;
+            let x = 0;
+            
+            ctx.moveTo(0, canvasRef.current.height / 2);
+            
+            for (let i = 0; i < dataArray.length; i++) {
+              const v = dataArray[i] / 128.0;
+              const y = (v * canvasRef.current.height) / 2;
+              
+              if (i === 0) {
+                ctx.moveTo(x, y);
+              } else {
+                ctx.lineTo(x, y);
+              }
+              
+              x += sliceWidth;
+            }
+            
+            ctx.lineTo(canvasRef.current.width, canvasRef.current.height / 2);
+            ctx.stroke();
             
             animationFrameRef.current = requestAnimationFrame(analyzeAudio);
           };
@@ -73,19 +102,25 @@ const AudioStream = ({ stream, isAudioOn, volume = 1 }: AudioStreamProps) => {
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full">
       <audio
         ref={audioRef}
         autoPlay
         playsInline
       />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 w-full h-full"
+        width={300}
+        height={50}
+      />
       <div
         className={cn(
           "absolute inset-0 rounded-full transition-transform duration-75",
-          isAudioOn && audioLevel > 0.05 && "animate-subtle-vibrate" // Lowered threshold for activation
+          isAudioOn && audioLevel > 0.05 && "animate-subtle-vibrate"
         )}
         style={{
-          transform: `scale(${1 + audioLevel * 0.1})`, // Increased scale effect
+          transform: `scale(${1 + audioLevel * 0.1})`,
         }}
       />
     </div>
