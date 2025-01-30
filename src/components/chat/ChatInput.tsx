@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Send, Image as ImageIcon, Smile } from 'lucide-react';
+import { Send, Image as ImageIcon, Smile, Bot } from 'lucide-react';
 import {
   Popover,
   PopoverContent,
@@ -19,9 +19,11 @@ const MEMES = [
 
 interface ChatInputProps {
   onSendMessage: (content: string, type: 'text' | 'gif' | 'meme') => void;
+  onToggleAI: () => void;
+  showAIChat: boolean;
 }
 
-const ChatInput = ({ onSendMessage }: ChatInputProps) => {
+const ChatInput = ({ onSendMessage, onToggleAI, showAIChat }: ChatInputProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [showGifSearch, setShowGifSearch] = useState(false);
   const [showMemes, setShowMemes] = useState(false);
@@ -97,6 +99,14 @@ const ChatInput = ({ onSendMessage }: ChatInputProps) => {
             </div>
           </PopoverContent>
         </Popover>
+
+        <Button
+          variant={showAIChat ? "secondary" : "outline"}
+          size="sm"
+          onClick={onToggleAI}
+        >
+          <Bot className="w-4 h-4" />
+        </Button>
       </div>
 
       <div className="flex gap-2">

@@ -9,13 +9,14 @@ import {
 } from "@/components/ui/dialog";
 import ChatMessage from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
+import AIChat from './chat/AIChat';
 
 interface Message {
   id: string;
   sender: string;
   content: string;
   timestamp: Date;
-  type: 'text' | 'gif' | 'meme';
+  type: 'text' | 'gif' | 'meme' | 'ai';
   reactions: { [key: string]: string[] };
 }
 
@@ -27,11 +28,12 @@ interface ChatPanelProps {
 
 const ChatPanel = ({ participants, isOpen, onClose }: ChatPanelProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [showAIChat, setShowAIChat] = useState(false);
 
-  const addMessage = (content: string, type: 'text' | 'gif' | 'meme' = 'text') => {
+  const addMessage = (content: string, type: 'text' | 'gif' | 'meme' | 'ai' = 'text') => {
     const newMsg: Message = {
       id: crypto.randomUUID(),
-      sender: 'You',
+      sender: type === 'ai' ? 'AI Assistant' : 'You',
       content,
       timestamp: new Date(),
       type,
@@ -52,6 +54,10 @@ const ChatPanel = ({ participants, isOpen, onClose }: ChatPanelProps) => {
       }
       return msg;
     }));
+  };
+
+  const handleAIMessage = (message: string) => {
+    addMessage(message, 'ai');
   };
 
   return (
@@ -77,7 +83,15 @@ const ChatPanel = ({ participants, isOpen, onClose }: ChatPanelProps) => {
             </div>
           </ScrollArea>
 
-          <ChatInput onSendMessage={addMessage} />
+          {showAIChat && (
+            <AIChat onSendMessage={handleAIMessage} />
+          )}
+
+          <ChatInput 
+            onSendMessage={addMessage}
+            onToggleAI={() => setShowAIChat(!showAIChat)}
+            showAIChat={showAIChat}
+          />
         </div>
       </DialogContent>
     </Dialog>
