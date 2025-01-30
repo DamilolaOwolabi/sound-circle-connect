@@ -13,29 +13,28 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000,
       retry: 1,
+      refetchOnWindowFocus: false, // Disable automatic refetching
     },
   },
 });
 
 function App() {
-  console.log('App component rendering');
+  console.log('App component rendering - checking route handling');
   
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <BrowserRouter basename="/">
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/meeting" element={<Meeting />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/meeting" element={<Meeting />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </React.StrictMode>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
