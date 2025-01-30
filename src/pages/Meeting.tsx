@@ -5,6 +5,7 @@ import ParticipantsList from '@/components/ParticipantsList';
 import ParticipantsGrid from '@/components/ParticipantsGrid';
 import RadiusControl from '@/components/RadiusControl';
 import AIFeatures from '@/components/AIFeatures';
+import HostControls from '@/components/HostControls';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
@@ -31,6 +32,7 @@ const Meeting = () => {
   const navigate = useNavigate();
   const isHost = location.state?.isHost;
   const [meetingId] = useState(() => location.state?.meetingId || crypto.randomUUID());
+  const [participants, setParticipants] = useState(MOCK_PARTICIPANTS);
 
   useEffect(() => {
     const handleResize = () => {
@@ -110,6 +112,27 @@ const Meeting = () => {
     }
   }, [location]);
 
+  const handleMuteAll = () => {
+    setParticipants(prev => 
+      prev.map(p => ({ ...p, isAudioOn: false }))
+    );
+    console.log('All participants muted');
+  };
+
+  const handleDisableAllVideos = () => {
+    setParticipants(prev => 
+      prev.map(p => ({ ...p, isVideoOn: false }))
+    );
+    console.log('All participant videos disabled');
+  };
+
+  const handleRemoveParticipant = (id: string) => {
+    setParticipants(prev => 
+      prev.filter(p => p.id !== id)
+    );
+    console.log('Participant removed:', id);
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="flex justify-between items-center mb-4">
@@ -144,10 +167,10 @@ const Meeting = () => {
             screenStream,
             background
           }}
-          mockParticipants={MOCK_PARTICIPANTS}
+          mockParticipants={participants}
         />
         <div className="flex flex-col gap-4">
-          <ParticipantsList participants={MOCK_PARTICIPANTS} />
+          <ParticipantsList participants={participants} />
           <RadiusControl
             radiusSize={radiusSize}
             onRadiusChange={handleRadiusChange}
@@ -155,6 +178,14 @@ const Meeting = () => {
             maxRadius={maxRadius}
           />
           <AIFeatures stream={stream} />
+          {isHost && (
+            <HostControls
+              participants={participants}
+              onMuteAll={handleMuteAll}
+              onDisableAllVideos={handleDisableAllVideos}
+              onRemoveParticipant={handleRemoveParticipant}
+            />
+          )}
         </div>
       </div>
       <Controls
