@@ -5,13 +5,12 @@ import ParticipantsList from '@/components/ParticipantsList';
 import ParticipantsGrid from '@/components/ParticipantsGrid';
 import RadiusControl from '@/components/RadiusControl';
 import AIFeatures from '@/components/AIFeatures';
-import HostControls from '@/components/HostControls';
+import HostControlPanel from '@/components/meeting/HostControlPanel';
 import MeetingInvite from '@/components/MeetingInvite';
+import AIMeetingAssistant from '@/components/chat/AIMeetingAssistant';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
-import { Share } from 'lucide-react';
 
 // Constants
 const MIN_RADIUS = 30;
@@ -34,6 +33,7 @@ const Meeting = () => {
   const isHost = location.state?.isHost;
   const [meetingId] = useState(() => location.state?.meetingId || crypto.randomUUID());
   const [participants, setParticipants] = useState(MOCK_PARTICIPANTS);
+  const [aiTranscript, setAiTranscript] = useState<string[]>([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -146,6 +146,30 @@ const Meeting = () => {
     });
   };
 
+  const handleAIResponse = (response: string) => {
+    setAiTranscript(prev => [...prev, response]);
+    console.log('New AI response:', response);
+  };
+
+  const handleInviteParticipant = () => {
+    const inviteLink = `${window.location.origin}/meeting?id=${meetingId}`;
+    
+    try {
+      navigator.clipboard.writeText(inviteLink);
+      toast({
+        title: "Invite Link Copied",
+        description: "Share this link with participants to join the meeting.",
+      });
+    } catch (error) {
+      console.error('Failed to copy invite link:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to copy invite link. Please try again.",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="flex justify-between items-center mb-4">
@@ -163,19 +187,22 @@ const Meeting = () => {
       </div>
       
       <div className="flex gap-6">
-        <ParticipantsGrid
-          layout={layout}
-          localUser={{
-            isAudioOn,
-            isVideoOn,
-            radiusSize,
-            stream,
-            screenStream,
-            background
-          }}
-          mockParticipants={participants}
-        />
-        <div className="flex flex-col gap-4">
+        <div className="flex-1">
+          <ParticipantsGrid
+            layout={layout}
+            localUser={{
+              isAudioOn,
+              isVideoOn,
+              radiusSize,
+              stream,
+              screenStream,
+              background
+            }}
+            mockParticipants={participants}
+          />
+        </div>
+        
+        <div className="w-96 space-y-4">
           <ParticipantsList participants={participants} />
           <RadiusControl
             radiusSize={radiusSize}
@@ -184,16 +211,22 @@ const Meeting = () => {
             maxRadius={maxRadius}
           />
           <AIFeatures stream={stream} />
+          <AIMeetingAssistant
+            transcript={aiTranscript}
+            onResponse={handleAIResponse}
+          />
           {isHost && (
-            <HostControls
+            <HostControlPanel
               participants={participants}
               onMuteAll={handleMuteAll}
               onDisableAllVideos={handleDisableAllVideos}
               onRemoveParticipant={handleRemoveParticipant}
+              onInviteParticipant={handleInviteParticipant}
             />
           )}
         </div>
       </div>
+
       <Controls
         isAudioOn={isAudioOn}
         isVideoOn={isVideoOn}
