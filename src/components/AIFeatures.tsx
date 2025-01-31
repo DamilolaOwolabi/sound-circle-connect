@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, MessageSquare, Sparkles } from 'lucide-react';
+import { Brain, MessageSquare, Sparkles, PieChart, List } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { SpeechRecognitionService } from '@/utils/speechUtils';
 
@@ -13,11 +13,15 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [topics, setTopics] = useState<string[]>([]);
+  const [sentiment, setSentiment] = useState<string>('');
   const speechServiceRef = useRef<SpeechRecognitionService | null>(null);
 
   useEffect(() => {
     speechServiceRef.current = new SpeechRecognitionService((text) => {
       setTranscript(prev => [...prev, text]);
+      analyzeSentiment(text);
+      extractTopics(text);
       console.log('New transcription:', text);
     });
 
@@ -147,6 +151,29 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
     }
   };
 
+  const analyzeSentiment = async (text: string) => {
+    try {
+      // Simulate sentiment analysis
+      const sentiments = ['positive', 'neutral', 'negative'];
+      const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
+      setSentiment(randomSentiment);
+      console.log('Sentiment analysis:', randomSentiment);
+    } catch (error) {
+      console.error('Sentiment analysis error:', error);
+    }
+  };
+
+  const extractTopics = async (text: string) => {
+    try {
+      // Simulate topic extraction
+      const newTopics = ['Project Planning', 'Budget', 'Timeline'];
+      setTopics(prev => [...new Set([...prev, ...newTopics])]);
+      console.log('Topics extracted:', newTopics);
+    } catch (error) {
+      console.error('Topic extraction error:', error);
+    }
+  };
+
   return (
     <div className="w-80 bg-background border rounded-lg p-4 flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -180,10 +207,39 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
           onClick={generateActionItems}
           disabled={transcript.length === 0 || isAnalyzing}
         >
-          <Brain className="w-4 h-4 mr-2" />
+          <List className="w-4 h-4 mr-2" />
           Generate Action Items
         </Button>
       </div>
+
+      {sentiment && (
+        <div className="text-sm">
+          <span className="font-medium">Current Sentiment: </span>
+          <span className={`capitalize ${
+            sentiment === 'positive' ? 'text-green-500' :
+            sentiment === 'negative' ? 'text-red-500' :
+            'text-yellow-500'
+          }`}>
+            {sentiment}
+          </span>
+        </div>
+      )}
+
+      {topics.length > 0 && (
+        <div className="text-sm">
+          <span className="font-medium">Key Topics:</span>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {topics.map((topic, index) => (
+              <span
+                key={index}
+                className="px-2 py-1 bg-primary/10 rounded-full text-xs"
+              >
+                {topic}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       <ScrollArea className="h-[200px] rounded-md border p-2">
         <div className="space-y-2">
