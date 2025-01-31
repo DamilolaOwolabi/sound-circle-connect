@@ -8,6 +8,8 @@ import AIFeatures from '@/components/AIFeatures';
 import HostControlPanel from '@/components/meeting/HostControlPanel';
 import MeetingInvite from '@/components/MeetingInvite';
 import AIMeetingAssistant from '@/components/chat/AIMeetingAssistant';
+import AITranscriptionPanel from '@/components/meeting/AITranscriptionPanel';
+import BreakoutRooms from '@/components/meeting/BreakoutRooms';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
@@ -63,6 +65,26 @@ const Meeting = () => {
   } = useMediaStream();
 
   const { isRecording, toggleRecording } = useRecording(stream);
+
+  const handleTranscriptionUpdate = (text: string) => {
+    setAiTranscript(prev => [...prev, text]);
+    console.log('New transcription:', text);
+  };
+
+  const handleCreateBreakoutRoom = (roomName: string) => {
+    console.log('Creating breakout room:', roomName);
+    // TODO: Implement room creation logic
+  };
+
+  const handleDeleteBreakoutRoom = (roomId: string) => {
+    console.log('Deleting breakout room:', roomId);
+    // TODO: Implement room deletion logic
+  };
+
+  const handleAssignParticipant = (roomId: string, participantId: string) => {
+    console.log('Assigning participant to room:', { roomId, participantId });
+    // TODO: Implement participant assignment logic
+  };
 
   const handleRadiusChange = (value: number[]) => {
     setRadiusSize(value[0]);
@@ -211,18 +233,30 @@ const Meeting = () => {
             maxRadius={maxRadius}
           />
           <AIFeatures stream={stream} />
+          <AITranscriptionPanel
+            stream={stream}
+            onTranscriptionUpdate={handleTranscriptionUpdate}
+          />
           <AIMeetingAssistant
             transcript={aiTranscript}
             onResponse={handleAIResponse}
           />
           {isHost && (
-            <HostControlPanel
-              participants={participants}
-              onMuteAll={handleMuteAll}
-              onDisableAllVideos={handleDisableAllVideos}
-              onRemoveParticipant={handleRemoveParticipant}
-              onInviteParticipant={handleInviteParticipant}
-            />
+            <>
+              <HostControlPanel
+                participants={participants}
+                onMuteAll={handleMuteAll}
+                onDisableAllVideos={handleDisableAllVideos}
+                onRemoveParticipant={handleRemoveParticipant}
+                onInviteParticipant={handleInviteParticipant}
+              />
+              <BreakoutRooms
+                participants={participants}
+                onCreateRoom={handleCreateBreakoutRoom}
+                onDeleteRoom={handleDeleteBreakoutRoom}
+                onAssignParticipant={handleAssignParticipant}
+              />
+            </>
           )}
         </div>
       </div>
