@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, MessageSquare, Sparkles, PieChart, List } from 'lucide-react';
+import { Brain } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import { SpeechRecognitionService } from '@/utils/speechUtils';
+import TranscriptionControls from './ai/TranscriptionControls';
+import AnalysisControls from './ai/AnalysisControls';
+import AnalysisDisplay from './ai/AnalysisDisplay';
+import TranscriptDisplay from './ai/TranscriptDisplay';
 
 interface AIFeaturesProps {
   stream: MediaStream | null;
@@ -34,15 +36,6 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
   }, []);
 
   const startTranscription = async () => {
-    if (!stream) {
-      toast({
-        variant: "destructive",
-        title: "No Audio Stream",
-        description: "Please enable your microphone to use AI transcription.",
-      });
-      return;
-    }
-
     try {
       setIsTranscribing(true);
       speechServiceRef.current?.start();
@@ -89,9 +82,7 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
         description: "AI is analyzing your meeting transcript...",
       });
 
-      // Simulate AI processing time
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
       const summary = "Key points discussed:\n- Project timeline review\n- Budget allocation\n- Next steps and action items";
       setTranscript(prev => [...prev, "\n=== Meeting Summary ===\n" + summary]);
       
@@ -129,9 +120,7 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
         description: "AI is analyzing the transcript for action items...",
       });
 
-      // Simulate AI processing time
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
       const actionItems = "Action Items:\n1. Schedule follow-up meeting\n2. Prepare project timeline\n3. Review budget proposal";
       setTranscript(prev => [...prev, "\n=== Action Items ===\n" + actionItems]);
       
@@ -153,7 +142,6 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
 
   const analyzeSentiment = async (text: string) => {
     try {
-      // Simulate sentiment analysis
       const sentiments = ['positive', 'neutral', 'negative'];
       const randomSentiment = sentiments[Math.floor(Math.random() * sentiments.length)];
       setSentiment(randomSentiment);
@@ -165,7 +153,6 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
 
   const extractTopics = async (text: string) => {
     try {
-      // Simulate topic extraction
       const newTopics = ['Project Planning', 'Budget', 'Timeline'];
       setTopics(prev => [...new Set([...prev, ...newTopics])]);
       console.log('Topics extracted:', newTopics);
@@ -181,78 +168,28 @@ const AIFeatures = ({ stream }: AIFeaturesProps) => {
         <Brain className="w-5 h-5 text-primary" />
       </div>
       
-      <div className="space-y-2">
-        <Button
-          variant={isTranscribing ? "destructive" : "default"}
-          className="w-full"
-          onClick={isTranscribing ? stopTranscription : startTranscription}
-        >
-          <MessageSquare className="w-4 h-4 mr-2" />
-          {isTranscribing ? "Stop Transcription" : "Start Transcription"}
-        </Button>
-        
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={generateSummary}
-          disabled={transcript.length === 0 || isAnalyzing}
-        >
-          <Sparkles className="w-4 h-4 mr-2" />
-          Generate Summary
-        </Button>
+      <TranscriptionControls
+        isTranscribing={isTranscribing}
+        stream={stream}
+        onStartTranscription={startTranscription}
+        onStopTranscription={stopTranscription}
+      />
+      
+      <AnalysisControls
+        isAnalyzing={isAnalyzing}
+        hasTranscript={transcript.length > 0}
+        onGenerateSummary={generateSummary}
+        onGenerateActionItems={generateActionItems}
+      />
 
-        <Button
-          variant="outline"
-          className="w-full"
-          onClick={generateActionItems}
-          disabled={transcript.length === 0 || isAnalyzing}
-        >
-          <List className="w-4 h-4 mr-2" />
-          Generate Action Items
-        </Button>
-      </div>
+      <AnalysisDisplay
+        sentiment={sentiment}
+        topics={topics}
+      />
 
-      {sentiment && (
-        <div className="text-sm">
-          <span className="font-medium">Current Sentiment: </span>
-          <span className={`capitalize ${
-            sentiment === 'positive' ? 'text-green-500' :
-            sentiment === 'negative' ? 'text-red-500' :
-            'text-yellow-500'
-          }`}>
-            {sentiment}
-          </span>
-        </div>
-      )}
-
-      {topics.length > 0 && (
-        <div className="text-sm">
-          <span className="font-medium">Key Topics:</span>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {topics.map((topic, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-primary/10 rounded-full text-xs"
-              >
-                {topic}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <ScrollArea className="h-[200px] rounded-md border p-2">
-        <div className="space-y-2">
-          {transcript.map((text, index) => (
-            <p key={index} className="text-sm whitespace-pre-wrap">{text}</p>
-          ))}
-          {transcript.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center">
-              Transcription will appear here...
-            </p>
-          )}
-        </div>
-      </ScrollArea>
+      <TranscriptDisplay
+        transcript={transcript}
+      />
     </div>
   );
 };
