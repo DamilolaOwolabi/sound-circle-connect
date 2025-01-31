@@ -6,6 +6,7 @@ import ParticipantsGrid from '@/components/ParticipantsGrid';
 import RadiusControl from '@/components/RadiusControl';
 import AIFeatures from '@/components/AIFeatures';
 import HostControls from '@/components/HostControls';
+import MeetingInvite from '@/components/MeetingInvite';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
@@ -117,6 +118,10 @@ const Meeting = () => {
       prev.map(p => ({ ...p, isAudioOn: false }))
     );
     console.log('All participants muted');
+    toast({
+      title: "All Participants Muted",
+      description: "All participants have been muted by the host.",
+    });
   };
 
   const handleDisableAllVideos = () => {
@@ -124,6 +129,10 @@ const Meeting = () => {
       prev.map(p => ({ ...p, isVideoOn: false }))
     );
     console.log('All participant videos disabled');
+    toast({
+      title: "All Videos Disabled",
+      description: "All participant videos have been disabled by the host.",
+    });
   };
 
   const handleRemoveParticipant = (id: string) => {
@@ -131,6 +140,10 @@ const Meeting = () => {
       prev.filter(p => p.id !== id)
     );
     console.log('Participant removed:', id);
+    toast({
+      title: "Participant Removed",
+      description: "The participant has been removed from the meeting.",
+    });
   };
 
   return (
@@ -145,14 +158,7 @@ const Meeting = () => {
           <h1 className="text-2xl font-bold text-primary">Meeting Room</h1>
         </div>
         {isHost && (
-          <Button
-            variant="outline"
-            onClick={handleShareInvite}
-            className="flex items-center gap-2"
-          >
-            <Share className="w-4 h-4" />
-            Share Invite Link
-          </Button>
+          <MeetingInvite meetingId={meetingId} isHost={isHost} />
         )}
       </div>
       

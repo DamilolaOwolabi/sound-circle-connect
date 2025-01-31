@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import ChatMessage from './chat/ChatMessage';
 import ChatInput from './chat/ChatInput';
-import AIChat from './chat/AIChat';
+import AIChatAssistant from './chat/AIChatAssistant';
 
 interface Message {
   id: string;
@@ -29,6 +29,7 @@ interface ChatPanelProps {
 const ChatPanel = ({ participants, isOpen, onClose }: ChatPanelProps) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showAIChat, setShowAIChat] = useState(false);
+  const [transcript, setTranscript] = useState<string[]>([]);
 
   const addMessage = (content: string, type: 'text' | 'gif' | 'meme' | 'ai' = 'text') => {
     const newMsg: Message = {
@@ -40,6 +41,15 @@ const ChatPanel = ({ participants, isOpen, onClose }: ChatPanelProps) => {
       reactions: {},
     };
     setMessages(prev => [...prev, newMsg]);
+    
+    // Update transcript for AI context
+    if (type === 'text') {
+      setTranscript(prev => [...prev, content]);
+    }
+  };
+
+  const handleAIResponse = (response: string) => {
+    addMessage(response, 'ai');
   };
 
   const addReaction = (messageId: string, emoji: string) => {
@@ -54,10 +64,6 @@ const ChatPanel = ({ participants, isOpen, onClose }: ChatPanelProps) => {
       }
       return msg;
     }));
-  };
-
-  const handleAIMessage = (message: string) => {
-    addMessage(message, 'ai');
   };
 
   return (
@@ -84,7 +90,12 @@ const ChatPanel = ({ participants, isOpen, onClose }: ChatPanelProps) => {
           </ScrollArea>
 
           {showAIChat && (
-            <AIChat onSendMessage={handleAIMessage} />
+            <div className="p-4 border-t">
+              <AIChatAssistant
+                transcript={transcript}
+                onResponse={handleAIResponse}
+              />
+            </div>
           )}
 
           <ChatInput 
