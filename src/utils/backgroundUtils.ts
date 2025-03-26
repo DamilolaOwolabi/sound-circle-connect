@@ -98,7 +98,7 @@ export const processVideoFrame = async (
       const x = (canvas.width - bgImage.width * scale) / 2;
       const y = (canvas.height - bgImage.height * scale) / 2;
       
-      // Use high quality image rendering
+      // Use standard image smoothing settings
       tempCtx.imageSmoothingEnabled = true;
       tempCtx.imageSmoothingQuality = 'high';
       

@@ -118,7 +118,8 @@ const VideoDisplay = ({
           className
         )}
         style={{
-          imageRendering: 'high-quality',
+          // Use valid CSS values for imageRendering
+          imageRendering: 'auto',
           ...videoStyle
         }}
       />
@@ -132,7 +133,8 @@ const VideoDisplay = ({
             className
           )}
           style={{
-            imageRendering: 'high-quality',
+            // Use valid CSS values for imageRendering
+            imageRendering: 'auto',
             ...videoStyle
           }}
         />
