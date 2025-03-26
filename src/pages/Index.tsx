@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -12,22 +13,9 @@ const Index = () => {
 
   console.log('Radius Mode:', radiusMode);
 
-  const handleHostMeeting = () => {
-    console.log('Host meeting clicked');
-    toast({
-      title: "Creating new meeting...",
-      description: "You will be redirected to the meeting room.",
-    });
-    navigate('/meeting', { state: { isHost: true } });
-  };
-
-  const handleJoinMeeting = () => {
-    console.log('Join meeting clicked');
-    toast({
-      title: "Joining meeting...",
-      description: "You will be redirected to the meeting room.",
-    });
-    navigate('/meeting', { state: { isHost: false } });
+  const handleNavigateToPreMeeting = () => {
+    console.log('Navigating to pre-meeting page');
+    navigate('/pre-meeting');
   };
 
   return (
@@ -53,19 +41,24 @@ const Index = () => {
           <Button 
             size="lg" 
             className="h-24 text-lg bg-[#9b87f5] hover:bg-[#8b77e5]"
-            onClick={handleHostMeeting}
+            onClick={handleNavigateToPreMeeting}
           >
             <Video className="mr-2 h-5 w-5" />
-            Host a Meeting
+            Start or Join Meeting
           </Button>
           <Button 
             size="lg" 
             className="h-24 text-lg bg-[#D946EF] hover:bg-[#C936DF]"
             variant="secondary"
-            onClick={handleJoinMeeting}
+            onClick={() => {
+              toast({
+                title: "View Past Meetings",
+                description: "This feature is coming soon!",
+              });
+            }}
           >
             <Users className="mr-2 h-5 w-5" />
-            Join a Meeting
+            View Past Meetings
           </Button>
         </div>
 

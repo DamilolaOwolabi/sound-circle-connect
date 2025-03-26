@@ -14,7 +14,6 @@ import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
 
-// Constants
 const MIN_RADIUS = 30;
 const MAX_RADIUS = Math.min(window.innerWidth, window.innerHeight) / 2;
 
@@ -34,6 +33,8 @@ const Meeting = () => {
   const navigate = useNavigate();
   const isHost = location.state?.isHost;
   const [meetingId] = useState(() => location.state?.meetingId || crypto.randomUUID());
+  const [meetingName] = useState(() => location.state?.meetingName || 'Untitled Meeting');
+  const [password] = useState(() => location.state?.password || '');
   const [participants, setParticipants] = useState(MOCK_PARTICIPANTS);
   const [aiTranscript, setAiTranscript] = useState<string[]>([]);
 
@@ -41,7 +42,6 @@ const Meeting = () => {
     const handleResize = () => {
       const newMaxRadius = Math.min(window.innerWidth, window.innerHeight) / 2;
       setMaxRadius(newMaxRadius);
-      // Adjust current radius if it exceeds new max
       if (radiusSize > newMaxRadius) {
         setRadiusSize(newMaxRadius);
       }
@@ -73,17 +73,14 @@ const Meeting = () => {
 
   const handleCreateBreakoutRoom = (roomName: string) => {
     console.log('Creating breakout room:', roomName);
-    // TODO: Implement room creation logic
   };
 
   const handleDeleteBreakoutRoom = (roomId: string) => {
     console.log('Deleting breakout room:', roomId);
-    // TODO: Implement room deletion logic
   };
 
   const handleAssignParticipant = (roomId: string, participantId: string) => {
     console.log('Assigning participant to room:', { roomId, participantId });
-    // TODO: Implement participant assignment logic
   };
 
   const handleRadiusChange = (value: number[]) => {
@@ -125,15 +122,22 @@ const Meeting = () => {
   };
 
   useEffect(() => {
-    // Handle joining via invite link
     const params = new URLSearchParams(location.search);
     const inviteMeetingId = params.get('id');
+    const invitePassword = params.get('password');
     
     if (inviteMeetingId) {
       console.log('Joining meeting via invite link:', inviteMeetingId);
-      // You can add additional logic here for joining via invite
+      if (password && invitePassword !== password) {
+        navigate('/pre-meeting');
+        toast({
+          variant: "destructive",
+          title: "Incorrect Password",
+          description: "The password you provided is incorrect.",
+        });
+      }
     }
-  }, [location]);
+  }, [location, navigate, password]);
 
   const handleMuteAll = () => {
     setParticipants(prev => 
@@ -201,7 +205,7 @@ const Meeting = () => {
             alt="SoundRadius Logo" 
             className="h-8 w-auto"
           />
-          <h1 className="text-2xl font-bold text-primary">Meeting Room</h1>
+          <h1 className="text-2xl font-bold text-primary">{meetingName}</h1>
         </div>
         {isHost && (
           <MeetingInvite meetingId={meetingId} isHost={isHost} />

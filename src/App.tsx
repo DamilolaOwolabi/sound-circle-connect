@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Meeting from "./pages/Meeting";
+import PreMeeting from "./pages/PreMeeting";
 import React from 'react';
 
 // Create a client
@@ -27,6 +29,7 @@ function App() {
         <BrowserRouter basename="/">
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/pre-meeting" element={<PreMeeting />} />
             <Route path="/meeting" element={<Meeting />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
