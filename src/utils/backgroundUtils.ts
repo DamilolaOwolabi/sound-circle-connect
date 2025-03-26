@@ -1,10 +1,11 @@
+
 import { pipeline, env } from '@huggingface/transformers';
 
 // Configure transformers.js to always download models
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 
-const MAX_IMAGE_DIMENSION = 1024;
+const MAX_IMAGE_DIMENSION = 1920; // Increase max dimension for higher quality
 
 function resizeImageIfNeeded(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, image: HTMLImageElement) {
   let width = image.naturalWidth;
@@ -38,11 +39,11 @@ export const processVideoFrame = async (
   if (!background) return null;
 
   try {
-    // Create canvas and draw current video frame
+    // Create canvas and draw current video frame with proper dimensions
     const canvas = document.createElement('canvas');
     canvas.width = videoElement.videoWidth;
     canvas.height = videoElement.videoHeight;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
     
     if (!ctx) return null;
     
@@ -54,7 +55,7 @@ export const processVideoFrame = async (
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
-      const tempCtx = tempCanvas.getContext('2d');
+      const tempCtx = tempCanvas.getContext('2d', { alpha: false });
       
       if (!tempCtx) return null;
       
@@ -68,7 +69,14 @@ export const processVideoFrame = async (
       // Load background image
       const bgImage = new Image();
       bgImage.crossOrigin = 'anonymous';
-      bgImage.src = background.url;
+      
+      // Add dimensions and quality parameters for Unsplash images
+      if (background.url.includes('unsplash.com') && !background.url.includes('&w=')) {
+        const separator = background.url.includes('?') ? '&' : '?';
+        bgImage.src = `${background.url}${separator}w=${MAX_IMAGE_DIMENSION}&q=90&fit=crop`;
+      } else {
+        bgImage.src = background.url;
+      }
       
       await new Promise((resolve) => {
         bgImage.onload = resolve;
@@ -78,7 +86,7 @@ export const processVideoFrame = async (
       const tempCanvas = document.createElement('canvas');
       tempCanvas.width = canvas.width;
       tempCanvas.height = canvas.height;
-      const tempCtx = tempCanvas.getContext('2d');
+      const tempCtx = tempCanvas.getContext('2d', { alpha: false });
       
       if (!tempCtx) return null;
       
@@ -89,6 +97,10 @@ export const processVideoFrame = async (
       );
       const x = (canvas.width - bgImage.width * scale) / 2;
       const y = (canvas.height - bgImage.height * scale) / 2;
+      
+      // Use high quality image rendering
+      tempCtx.imageSmoothingEnabled = true;
+      tempCtx.imageSmoothingQuality = 'high';
       
       tempCtx.drawImage(
         bgImage,

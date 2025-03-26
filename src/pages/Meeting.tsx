@@ -13,6 +13,7 @@ import BreakoutRooms from '@/components/meeting/BreakoutRooms';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
+import ResponsiveImage from '@/components/ResponsiveImage';
 
 const MIN_RADIUS = 30;
 const MAX_RADIUS = Math.min(window.innerWidth, window.innerHeight) / 2;
@@ -200,10 +201,11 @@ const Meeting = () => {
     <div className="min-h-screen bg-background p-6">
       <div className="flex justify-between items-center mb-4">
         <div className="flex items-center gap-4">
-          <img 
+          <ResponsiveImage 
             src="/lovable-uploads/efac273c-f666-48c6-aa08-e42558a7b939.png" 
             alt="SoundRadius Logo" 
             className="h-8 w-auto"
+            priority={true}
           />
           <h1 className="text-2xl font-bold text-primary">{meetingName}</h1>
         </div>

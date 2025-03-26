@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { processVideoFrame } from '@/utils/backgroundUtils';
@@ -38,6 +39,17 @@ const VideoDisplay = ({
           } else if (videoRef.current) {
             console.log('Setting video stream:', stream.id);
             videoRef.current.srcObject = stream;
+            
+            // Set video constraints for higher quality
+            const constraints = {
+              width: { ideal: 1920 },
+              height: { ideal: 1080 },
+              frameRate: { ideal: 30 }
+            };
+            
+            track.applyConstraints(constraints)
+              .catch(error => console.warn('Could not apply video constraints:', error));
+            
             track.enabled = true;
           }
         });
@@ -49,8 +61,14 @@ const VideoDisplay = ({
     const processFrame = async () => {
       if (!videoRef.current || !canvasRef.current || !isVideoOn || isScreenShare) return;
 
-      const ctx = canvasRef.current.getContext('2d');
+      const ctx = canvasRef.current.getContext('2d', { alpha: false });
       if (!ctx) return;
+
+      // Set canvas dimensions to match video for proper resolution
+      if (videoRef.current.videoWidth > 0 && canvasRef.current.width !== videoRef.current.videoWidth) {
+        canvasRef.current.width = videoRef.current.videoWidth;
+        canvasRef.current.height = videoRef.current.videoHeight;
+      }
 
       // Process frame with background if needed
       if (background) {
@@ -99,18 +117,24 @@ const VideoDisplay = ({
           "w-full h-full",
           className
         )}
-        style={videoStyle}
+        style={{
+          imageRendering: 'high-quality',
+          ...videoStyle
+        }}
       />
       {isProcessingBackground && (
         <canvas
           ref={canvasRef}
-          width={videoRef.current?.videoWidth || 640}
-          height={videoRef.current?.videoHeight || 480}
+          width={videoRef.current?.videoWidth || 1280}
+          height={videoRef.current?.videoHeight || 720}
           className={cn(
             "w-full h-full object-cover",
             className
           )}
-          style={videoStyle}
+          style={{
+            imageRendering: 'high-quality',
+            ...videoStyle
+          }}
         />
       )}
     </>

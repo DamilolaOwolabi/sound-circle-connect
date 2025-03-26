@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Copy, Mail, Users, LogIn } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import ResponsiveImage from '@/components/ResponsiveImage';
 
 const PreMeeting = () => {
   const navigate = useNavigate();
@@ -118,10 +119,11 @@ const PreMeeting = () => {
         {/* Header with Logo */}
         <div className="text-center space-y-4">
           <div className="flex flex-col items-center justify-center gap-3">
-            <img 
+            <ResponsiveImage 
               src="/lovable-uploads/efac273c-f666-48c6-aa08-e42558a7b939.png" 
               alt="SoundRadius Logo" 
               className="w-48 h-auto mb-4"
+              priority={true}
             />
             <h1 className="text-4xl font-bold text-primary">Sound Radius</h1>
           </div>

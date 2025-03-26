@@ -6,6 +6,7 @@ import { Settings, Video, Users } from "lucide-react";
 import RadiusIcon from '@/components/RadiusIcon';
 import { useNavigate } from 'react-router-dom';
 import { toast } from "@/components/ui/use-toast";
+import ResponsiveImage from '@/components/ResponsiveImage';
 
 const Index = () => {
   const [radiusMode, setRadiusMode] = React.useState(false);
@@ -24,10 +25,11 @@ const Index = () => {
         {/* Header with Logo */}
         <div className="text-center space-y-4">
           <div className="flex flex-col items-center justify-center gap-3">
-            <img 
+            <ResponsiveImage 
               src="/lovable-uploads/efac273c-f666-48c6-aa08-e42558a7b939.png" 
               alt="SoundRadius Logo" 
               className="w-48 h-auto mb-4"
+              priority={true}
             />
             <h1 className="text-4xl font-bold text-primary">Sound Radius</h1>
           </div>
