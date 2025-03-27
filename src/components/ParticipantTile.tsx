@@ -14,6 +14,7 @@ interface ParticipantTileProps {
   className?: string;
   stream?: MediaStream | null;
   background?: { id: string; url?: string; type?: string } | null;
+  isSelfView?: boolean;
 }
 
 const ParticipantTile = ({
@@ -23,7 +24,8 @@ const ParticipantTile = ({
   radiusSize,
   className,
   stream,
-  background
+  background,
+  isSelfView = false
 }: ParticipantTileProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -100,8 +102,11 @@ const ParticipantTile = ({
       setIsInRange(hasIntersection);
     };
 
-    checkRadiusIntersection();
-  }, [position, radiusSize, name]);
+    // Only check radius intersection if not a self-view component
+    if (!isSelfView) {
+      checkRadiusIntersection();
+    }
+  }, [position, radiusSize, name, isSelfView]);
 
   // Handle video errors
   const handleVideoError = (error: Error) => {
@@ -132,16 +137,17 @@ const ParticipantTile = ({
       className={cn(
         "participant-tile relative cursor-move p-1",
         isDragging && "opacity-75",
+        isSelfView && "self-view",
         className
       )}
-      draggable
+      draggable={!isSelfView}
       onDragStart={handleDragStart}
       onDrag={handleDrag}
       onDragEnd={handleDragEnd}
       style={{
-        position: 'absolute',
-        left: `${position.x}px`,
-        top: `${position.y}px`,
+        position: isSelfView ? 'relative' : 'absolute',
+        left: isSelfView ? 'auto' : `${position.x}px`,
+        top: isSelfView ? 'auto' : `${position.y}px`,
         transform: `translate(${isDragging ? '-4px, -4px' : '0, 0'})`,
         transition: isDragging ? 'none' : 'transform 0.2s ease-out',
         zIndex: isDragging ? 10 : 1,
@@ -196,7 +202,7 @@ const ParticipantTile = ({
           {isScreenShare && <Monitor className="w-3 h-3" />}
         </div>
         
-        {!isScreenShare && (
+        {!isScreenShare && !isSelfView && (
           <div 
             className="absolute inset-0 pointer-events-none participant-radius"
             style={{

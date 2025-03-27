@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Controls from '@/components/Controls';
@@ -10,6 +11,7 @@ import MeetingInvite from '@/components/MeetingInvite';
 import AIMeetingAssistant from '@/components/chat/AIMeetingAssistant';
 import AITranscriptionPanel from '@/components/meeting/AITranscriptionPanel';
 import BreakoutRooms from '@/components/meeting/BreakoutRooms';
+import SelfView from '@/components/SelfView';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
@@ -266,6 +268,14 @@ const Meeting = () => {
           )}
         </div>
       </div>
+
+      {/* Add the SelfView component */}
+      <SelfView 
+        stream={stream}
+        isAudioOn={isAudioOn}
+        isVideoOn={isVideoOn}
+        background={background}
+      />
 
       <Controls
         isAudioOn={isAudioOn}
