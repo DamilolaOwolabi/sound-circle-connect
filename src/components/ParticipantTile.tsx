@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Video, VideoOff, Monitor } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -166,7 +167,7 @@ const ParticipantTile = ({
             className="absolute inset-0 pointer-events-none participant-radius"
             style={{
               background: `radial-gradient(circle at center, transparent ${radiusSize * 0.5}px, ${isInRange ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)'} ${radiusSize}px)`,
-              backdropFilter: isInRange ? 'blur(4px)' : 'blur(2px)',
+              // Remove the backdropFilter that was adding blur
               transition: 'all 0.3s ease-in-out'
             }}
           />
