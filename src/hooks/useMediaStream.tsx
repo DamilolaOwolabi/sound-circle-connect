@@ -1,6 +1,18 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
+interface NetworkInformation extends EventTarget {
+  readonly downlink: number;
+  readonly effectiveType: 'slow-2g' | '2g' | '3g' | '4g';
+  readonly rtt: number;
+  readonly saveData: boolean;
+  onchange: ((this: NetworkInformation, ev: Event) => any) | null;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 interface VideoConstraints {
   width: { ideal: number };
   height: { ideal: number };
@@ -54,12 +66,12 @@ export const useMediaStream = () => {
   const MAX_RECONNECT_ATTEMPTS = 5;
 
   const updateNetworkStats = useCallback(() => {
-    if ('connection' in navigator && navigator.connection) {
-      const connection = navigator.connection as any;
+    const nav = navigator as NavigatorWithConnection;
+    if (nav.connection) {
       setNetworkStats({
-        downlink: connection.downlink || null,
-        effectiveType: connection.effectiveType || null,
-        rtt: connection.rtt || null,
+        downlink: nav.connection.downlink || null,
+        effectiveType: nav.connection.effectiveType || null,
+        rtt: nav.connection.rtt || null,
         lastUpdated: Date.now()
       });
     }
@@ -70,12 +82,12 @@ export const useMediaStream = () => {
     
     const handleConnectionChange = () => {
       updateNetworkStats();
-      const connection = navigator.connection as any;
+      const nav = navigator as NavigatorWithConnection;
       
-      if (connection && connection.effectiveType) {
+      if (nav.connection) {
         let newQuality: 'low' | 'medium' | 'high' | 'hd' = videoQuality;
         
-        switch (connection.effectiveType) {
+        switch (nav.connection.effectiveType) {
           case 'slow-2g':
           case '2g':
             newQuality = 'low';
@@ -91,7 +103,7 @@ export const useMediaStream = () => {
         }
         
         if (newQuality !== videoQuality) {
-          console.log(`Network changed to ${connection.effectiveType}, adjusting quality to ${newQuality}`);
+          console.log(`Network changed to ${nav.connection.effectiveType}, adjusting quality to ${newQuality}`);
           setVideoQuality(newQuality);
           if (stream) {
             applyVideoConstraints(stream, newQuality);
@@ -100,13 +112,14 @@ export const useMediaStream = () => {
       }
     };
     
-    if ('connection' in navigator) {
-      (navigator.connection as any)?.addEventListener('change', handleConnectionChange);
+    const nav = navigator as NavigatorWithConnection;
+    if (nav.connection) {
+      nav.connection.addEventListener('change', handleConnectionChange);
     }
     
     return () => {
-      if ('connection' in navigator) {
-        (navigator.connection as any)?.removeEventListener('change', handleConnectionChange);
+      if (nav.connection) {
+        nav.connection.removeEventListener('change', handleConnectionChange);
       }
     };
   }, [updateNetworkStats, videoQuality, stream]);
