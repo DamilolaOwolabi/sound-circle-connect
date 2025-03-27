@@ -100,7 +100,12 @@ const ParticipantTile = ({
     checkRadiusIntersection();
   }, [position, radiusSize, name]);
 
-  const isScreenShare = stream?.getVideoTracks().some(track => track.label.includes('screen'));
+  // Determine if the stream is a screen share
+  const isScreenShare = stream?.getVideoTracks().some(track => 
+    track.label.includes('screen') || 
+    track.label.includes('window') || 
+    track.label.includes('tab')
+  );
 
   return (
     <div
@@ -137,7 +142,7 @@ const ParticipantTile = ({
         <VideoDisplay 
           stream={stream}
           isVideoOn={isVideoOn}
-          isScreenShare={isScreenShare}
+          isScreenShare={!!isScreenShare}
           isAudioOn={isAudioOn}
           background={background}
         />
@@ -167,7 +172,6 @@ const ParticipantTile = ({
             className="absolute inset-0 pointer-events-none participant-radius"
             style={{
               background: `radial-gradient(circle at center, transparent ${radiusSize * 0.5}px, ${isInRange ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)'} ${radiusSize}px)`,
-              // Remove the backdropFilter that was adding blur
               transition: 'all 0.3s ease-in-out'
             }}
           />

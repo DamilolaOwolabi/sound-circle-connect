@@ -28,31 +28,29 @@ const VideoDisplay = ({
   const animationFrameRef = useRef<number>();
 
   useEffect(() => {
-    if (stream) {
-      const videoTracks = stream.getVideoTracks();
+    if (stream && videoRef.current) {
+      console.log('Setting video stream:', stream.id);
+      videoRef.current.srcObject = stream;
       
-      if (videoTracks.length > 0) {
-        videoTracks.forEach(track => {
-          if (!isVideoOn && !isScreenShare) {
-            console.log('Stopping video track:', track.label);
-            track.stop();
-          } else if (videoRef.current) {
-            console.log('Setting video stream:', stream.id);
-            videoRef.current.srcObject = stream;
-            
-            // Set video constraints for higher quality
-            const constraints = {
-              width: { ideal: 1920 },
-              height: { ideal: 1080 },
-              frameRate: { ideal: 30 }
-            };
-            
-            track.applyConstraints(constraints)
+      // Only apply constraints if the video is actually on
+      if (isVideoOn || isScreenShare) {
+        const videoTracks = stream.getVideoTracks();
+        
+        if (videoTracks.length > 0) {
+          // Set video constraints for higher quality
+          const constraints = {
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30 }
+          };
+          
+          try {
+            videoTracks[0].applyConstraints(constraints)
               .catch(error => console.warn('Could not apply video constraints:', error));
-            
-            track.enabled = true;
+          } catch (e) {
+            console.warn('Error applying constraints:', e);
           }
-        });
+        }
       }
     }
   }, [stream, isVideoOn, isScreenShare]);
@@ -100,7 +98,7 @@ const VideoDisplay = ({
     };
   }, [stream, isVideoOn, isScreenShare, background]);
 
-  if (!stream || (!isVideoOn && !isScreenShare)) {
+  if (!stream) {
     return null;
   }
 
@@ -118,7 +116,6 @@ const VideoDisplay = ({
           className
         )}
         style={{
-          // Use valid CSS values for imageRendering
           imageRendering: 'auto',
           ...videoStyle
         }}
@@ -133,7 +130,6 @@ const VideoDisplay = ({
             className
           )}
           style={{
-            // Use valid CSS values for imageRendering
             imageRendering: 'auto',
             ...videoStyle
           }}

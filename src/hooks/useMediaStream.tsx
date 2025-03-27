@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 interface VideoConstraints {
@@ -23,6 +24,7 @@ export const useMediaStream = () => {
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("");
   const [selectedVideoDevice, setSelectedVideoDevice] = useState<string>("");
   const [videoQuality, setVideoQuality] = useState<'low' | 'medium' | 'high' | 'hd'>('medium');
+  const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
   const getVideoConstraints = (quality: keyof typeof QUALITY_SETTINGS, deviceId?: string): VideoConstraints & { deviceId?: string } => {
@@ -37,22 +39,34 @@ export const useMediaStream = () => {
 
   const initializeMedia = async (audioDeviceId?: string, videoDeviceId?: string) => {
     try {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      // Stop existing tracks before requesting new ones
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          track.stop();
+          console.log(`Stopped track: ${track.kind} - ${track.label}`);
+        });
       }
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
+      const constraints = {
         audio: audioDeviceId ? { deviceId: audioDeviceId } : true,
         video: getVideoConstraints(videoQuality, videoDeviceId),
-      });
+      };
+
+      console.log('Requesting media with constraints:', constraints);
+      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
       
-      console.log('Initial media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
+      console.log('Media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
       
+      // Store the stream in the ref for cleanup
+      streamRef.current = mediaStream;
+      
+      // Set audio track state
       mediaStream.getAudioTracks().forEach(track => {
         track.enabled = isAudioOn;
         console.log(`Initial audio track ${track.label} enabled:`, isAudioOn);
       });
       
+      // Set video track state
       mediaStream.getVideoTracks().forEach(track => {
         track.enabled = isVideoOn;
         console.log(`Initial video track ${track.label} enabled:`, isVideoOn);
@@ -73,15 +87,17 @@ export const useMediaStream = () => {
     initializeMedia();
 
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => {
+      // Clean up all streams on unmount
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
           track.stop();
-          console.log(`Stopped ${track.kind} track`);
+          console.log(`Cleanup: Stopped ${track.kind} track ${track.label}`);
         });
       }
       if (screenStream) {
         screenStream.getTracks().forEach(track => {
           track.stop();
+          console.log(`Cleanup: Stopped screen share track ${track.label}`);
         });
       }
     };
@@ -102,11 +118,17 @@ export const useMediaStream = () => {
     if (stream && isVideoOn) {
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) {
-        await videoTrack.applyConstraints(getVideoConstraints(quality));
-        toast({
-          title: "Video Quality Updated",
-          description: `Video quality set to ${quality}`,
-        });
+        try {
+          await videoTrack.applyConstraints(getVideoConstraints(quality));
+          toast({
+            title: "Video Quality Updated",
+            description: `Video quality set to ${quality}`,
+          });
+        } catch (error) {
+          console.error('Error applying quality constraints:', error);
+          // If constraints fail, try reinitializing the stream
+          await initializeMedia(selectedAudioDevice, selectedVideoDevice);
+        }
       }
     }
   };
@@ -123,19 +145,34 @@ export const useMediaStream = () => {
     }
   };
 
-  const toggleVideo = () => {
+  const toggleVideo = async () => {
+    const newState = !isVideoOn;
+    setIsVideoOn(newState);
+    
     if (stream) {
-      const videoTracks = stream.getVideoTracks();
-      const newState = !isVideoOn;
-      videoTracks.forEach(track => {
-        if (!newState) {
-          track.stop();
+      if (!newState) {
+        // Disable video tracks but don't stop them
+        stream.getVideoTracks().forEach(track => {
+          track.enabled = false;
+          console.log(`Video track ${track.label} disabled`);
+        });
+      } else {
+        // Check if we need to reinitialize
+        const videoTracks = stream.getVideoTracks();
+        if (videoTracks.length === 0 || videoTracks[0].readyState === 'ended') {
+          console.log('Video tracks ended or missing, reinitializing media');
+          await initializeMedia(selectedAudioDevice, selectedVideoDevice);
         } else {
-          initializeMedia(selectedAudioDevice, selectedVideoDevice);
+          // Just re-enable existing tracks
+          videoTracks.forEach(track => {
+            track.enabled = true;
+            console.log(`Video track ${track.label} enabled`);
+          });
         }
-        console.log(`Video track ${track.label} ${newState ? 'started' : 'stopped'}`);
-      });
-      setIsVideoOn(newState);
+      }
+    } else if (newState) {
+      // If we don't have a stream but video is being turned on, initialize it
+      await initializeMedia(selectedAudioDevice, selectedVideoDevice);
     }
   };
 
@@ -146,6 +183,14 @@ export const useMediaStream = () => {
           video: true,
           audio: true
         });
+        
+        // Add event listener for when user stops sharing via browser UI
+        displayStream.getVideoTracks()[0].addEventListener('ended', () => {
+          console.log('Screen sharing stopped via browser UI');
+          setScreenStream(null);
+          setIsScreenSharing(false);
+        });
+        
         setScreenStream(displayStream);
         setIsScreenSharing(true);
         toast({
@@ -153,7 +198,12 @@ export const useMediaStream = () => {
           description: "You are now sharing your screen.",
         });
       } else {
-        screenStream?.getTracks().forEach(track => track.stop());
+        if (screenStream) {
+          screenStream.getTracks().forEach(track => {
+            track.stop();
+            console.log(`Screen share track ${track.label} stopped`);
+          });
+        }
         setScreenStream(null);
         setIsScreenSharing(false);
         toast({
@@ -163,6 +213,7 @@ export const useMediaStream = () => {
       }
     } catch (error) {
       console.error('Error toggling screen share:', error);
+      setIsScreenSharing(false);
       toast({
         variant: "destructive",
         title: "Screen Sharing Error",
