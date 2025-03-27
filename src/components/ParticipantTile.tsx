@@ -1,9 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Video, VideoOff, Monitor } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Monitor, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import VideoDisplay from './VideoDisplay';
 import AudioStream from './AudioStream';
+import { useToast } from '@/hooks/use-toast';
 
 interface ParticipantTileProps {
   name: string;
@@ -27,8 +28,10 @@ const ParticipantTile = ({
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isInRange, setIsInRange] = useState(false);
+  const [hasVideoError, setHasVideoError] = useState(false);
   const tileRef = useRef<HTMLDivElement>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
+  const { toast } = useToast();
 
   useEffect(() => {
     console.log('Background updated for', name, ':', background);
@@ -100,6 +103,22 @@ const ParticipantTile = ({
     checkRadiusIntersection();
   }, [position, radiusSize, name]);
 
+  // Handle video errors
+  const handleVideoError = (error: Error) => {
+    console.error(`Video error for ${name}:`, error);
+    setHasVideoError(true);
+    toast({
+      variant: "destructive",
+      title: `Video Error for ${name}`,
+      description: error.message || "There was a problem with the video stream.",
+    });
+    
+    // Attempt recovery after a short delay
+    setTimeout(() => {
+      setHasVideoError(false);
+    }, 5000);
+  };
+
   // Determine if the stream is a screen share
   const isScreenShare = stream?.getVideoTracks().some(track => 
     track.label.includes('screen') || 
@@ -139,15 +158,25 @@ const ParticipantTile = ({
           transition: 'all 0.3s ease-in-out'
         }}
       >
-        <VideoDisplay 
-          stream={stream}
-          isVideoOn={isVideoOn}
-          isScreenShare={!!isScreenShare}
-          isAudioOn={isAudioOn}
-          background={background}
-        />
+        {hasVideoError ? (
+          <div className="absolute inset-0 flex items-center justify-center bg-destructive/10">
+            <div className="text-destructive flex flex-col items-center gap-2">
+              <AlertTriangle className="w-8 h-8" />
+              <p className="text-xs font-medium">Video error</p>
+            </div>
+          </div>
+        ) : (
+          <VideoDisplay 
+            stream={stream}
+            isVideoOn={isVideoOn}
+            isScreenShare={!!isScreenShare}
+            isAudioOn={isAudioOn}
+            background={background}
+            onVideoError={handleVideoError}
+          />
+        )}
         
-        {(!stream || (!isVideoOn && !isScreenShare)) && (
+        {(!stream || (!isVideoOn && !isScreenShare)) && !hasVideoError && (
           <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
             <div className="w-24 h-24 rounded-full bg-secondary/20 flex items-center justify-center text-2xl font-semibold">
               {name.charAt(0).toUpperCase()}
