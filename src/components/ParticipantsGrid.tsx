@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ParticipantTile from './ParticipantTile';
 
@@ -17,12 +18,29 @@ interface ParticipantsGridProps {
     radiusSize: number;
     stream: MediaStream | null;
     screenStream: MediaStream | null;
-    background?: { id: string; url?: string; type?: string } | null;  // Updated type definition
+    background?: { id: string; url?: string; type?: string } | null;
   };
   mockParticipants: Participant[];
 }
 
 const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsGridProps) => {
+  // Determine which stream to use (screen share has priority)
+  const activeStream = localUser.screenStream || localUser.stream;
+  
+  // Log stream info for debugging
+  React.useEffect(() => {
+    if (activeStream) {
+      console.log('ParticipantsGrid active stream:', activeStream.id);
+      console.log('Video tracks:', activeStream.getVideoTracks().map(t => ({
+        enabled: t.enabled,
+        readyState: t.readyState,
+        label: t.label
+      })));
+    } else {
+      console.log('ParticipantsGrid: No active stream');
+    }
+  }, [activeStream]);
+
   return (
     <div className={`flex-1 relative min-h-[600px] ${layout === 'grid' ? 'grid grid-cols-3 gap-4' : 'flex justify-center'}`}>
       <ParticipantTile
@@ -32,8 +50,8 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
         isVideoOn={localUser.isVideoOn}
         radiusSize={localUser.radiusSize}
         className={layout === 'grid' ? '' : 'w-full max-w-2xl'}
-        stream={localUser.screenStream || localUser.stream}
-        background={localUser.background}  // Pass background to ParticipantTile
+        stream={activeStream}
+        background={localUser.background}
       />
       {mockParticipants.map((participant) => (
         <ParticipantTile

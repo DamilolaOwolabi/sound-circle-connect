@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Video, VideoOff, Monitor, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,6 +33,12 @@ const ParticipantTile = ({
   const tileRef = useRef<HTMLDivElement>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (stream) {
+      console.log('ParticipantTile stream for', name, ':', stream.id, 'Video tracks:', stream.getVideoTracks().length);
+    }
+  }, [stream, name]);
 
   useEffect(() => {
     console.log('Background updated for', name, ':', background);
@@ -179,6 +184,7 @@ const ParticipantTile = ({
             isAudioOn={isAudioOn}
             background={background}
             onVideoError={handleVideoError}
+            className="w-full h-full"
           />
         )}
         

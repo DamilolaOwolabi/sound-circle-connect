@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import { processVideoFrame } from '@/utils/backgroundUtils';
@@ -27,6 +26,7 @@ const VideoDisplay = ({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isProcessingBackground, setIsProcessingBackground] = useState(false);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoStats, setVideoStats] = useState<{
     droppedFrames: number;
     fps: number;
@@ -39,7 +39,6 @@ const VideoDisplay = ({
   const frameCountRef = useRef<number>(0);
   const [adaptiveQuality, setAdaptiveQuality] = useState<'auto' | 'low' | 'medium' | 'high'>('auto');
   
-  // Handle video errors
   const handleVideoError = useCallback((event: Event) => {
     console.error('Video error:', event);
     if (onVideoError && event instanceof ErrorEvent) {
@@ -47,14 +46,12 @@ const VideoDisplay = ({
     }
   }, [onVideoError]);
 
-  // Monitor connection and stream health
   const monitorStreamHealth = useCallback(() => {
     if (!videoRef.current || !stream) return;
     
     const now = performance.now();
     frameCountRef.current++;
     
-    // Calculate FPS every second
     if (now - lastFrameTimeRef.current >= 1000) {
       const fps = Math.round((frameCountRef.current * 1000) / (now - lastFrameTimeRef.current));
       const resolution = videoRef.current.videoWidth 
@@ -68,7 +65,6 @@ const VideoDisplay = ({
         timestamp: now
       }));
       
-      // Adaptively adjust quality based on performance
       if (fps < 15 && adaptiveQuality !== 'low') {
         console.log('Low FPS detected, reducing quality');
         setAdaptiveQuality('low');
@@ -88,7 +84,6 @@ const VideoDisplay = ({
     }
   }, [stream, adaptiveQuality]);
 
-  // Adjust stream quality dynamically
   const adjustStreamQuality = useCallback((quality: 'auto' | 'low' | 'medium' | 'high') => {
     if (!stream) return;
     
@@ -123,7 +118,6 @@ const VideoDisplay = ({
         break;
       case 'auto':
       default:
-        // Let the browser decide optimal settings
         break;
     }
     
@@ -137,51 +131,59 @@ const VideoDisplay = ({
 
   useEffect(() => {
     if (stream && videoRef.current) {
-      console.log('Setting video stream:', stream.id);
+      console.log('Setting video stream:', stream.id, 'Video tracks:', stream.getVideoTracks().length);
+      
+      const videoTracks = stream.getVideoTracks();
+      if (videoTracks.length > 0) {
+        console.log('Video track enabled:', videoTracks[0].enabled, 'readyState:', videoTracks[0].readyState);
+      }
+      
       videoRef.current.srcObject = stream;
       
-      // Add error event listener
       videoRef.current.addEventListener('error', handleVideoError);
       
-      // Only apply constraints if the video is actually on
+      const handlePlaying = () => {
+        console.log('Video started playing:', stream.id);
+        setIsVideoPlaying(true);
+      };
+      
+      videoRef.current.addEventListener('playing', handlePlaying);
+      
       if (isVideoOn || isScreenShare) {
         const videoTracks = stream.getVideoTracks();
         
         if (videoTracks.length > 0) {
           try {
-            // Initial quality setting
             adjustStreamQuality(adaptiveQuality);
           } catch (e) {
             console.warn('Error applying initial constraints:', e);
           }
         }
       }
+      
+      return () => {
+        if (videoRef.current) {
+          videoRef.current.removeEventListener('error', handleVideoError);
+          videoRef.current.removeEventListener('playing', handlePlaying);
+        }
+      };
     }
-    
-    return () => {
-      if (videoRef.current) {
-        videoRef.current.removeEventListener('error', handleVideoError);
-      }
-    };
   }, [stream, isVideoOn, isScreenShare, handleVideoError, adjustStreamQuality, adaptiveQuality]);
 
   useEffect(() => {
     const processFrame = async () => {
       if (!videoRef.current || !canvasRef.current || !isVideoOn || isScreenShare) return;
 
-      // Monitor stream health with each frame
       monitorStreamHealth();
 
       const ctx = canvasRef.current.getContext('2d', { alpha: false });
       if (!ctx) return;
 
-      // Set canvas dimensions to match video for proper resolution
       if (videoRef.current.videoWidth > 0 && canvasRef.current.width !== videoRef.current.videoWidth) {
         canvasRef.current.width = videoRef.current.videoWidth;
         canvasRef.current.height = videoRef.current.videoHeight;
       }
 
-      // Process frame with background if needed
       if (background) {
         try {
           const processedFrame = await processVideoFrame(videoRef.current, background);
@@ -190,19 +192,15 @@ const VideoDisplay = ({
           }
         } catch (error) {
           console.error('Error processing video frame:', error);
-          // Fallback to direct rendering if processing fails
           ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
         }
       } else {
-        // If no background processing needed, just draw the video frame
         ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
       }
 
-      // Schedule next frame
       animationFrameRef.current = requestAnimationFrame(processFrame);
     };
 
-    // Start processing frames if video is on and we have a stream
     if (isVideoOn && stream && !isScreenShare) {
       setIsProcessingBackground(true);
       processFrame();
@@ -217,7 +215,6 @@ const VideoDisplay = ({
     };
   }, [stream, isVideoOn, isScreenShare, background, monitorStreamHealth]);
 
-  // Clean up intervals and animation frames
   useEffect(() => {
     return () => {
       if (statsIntervalRef.current) {
@@ -229,13 +226,13 @@ const VideoDisplay = ({
     };
   }, []);
 
-  // Handle playback errors with automatic recovery attempts
   const handleVideoPlaybackError = useCallback(async () => {
     if (!videoRef.current || !stream) return;
     
     try {
       console.log('Attempting to recover video playback');
       await videoRef.current.play();
+      setIsVideoPlaying(true);
     } catch (error) {
       console.error('Failed to recover video playback:', error);
       if (onVideoError) {
@@ -244,35 +241,47 @@ const VideoDisplay = ({
     }
   }, [stream, onVideoError]);
 
-  // Ensure video plays when it's ready
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (!videoElement) return;
+    if (!videoElement || !stream) return;
     
     const playVideo = async () => {
       try {
         if (videoElement.paused) {
+          console.log('Attempting to play video');
           await videoElement.play();
+          setIsVideoPlaying(true);
         }
       } catch (error) {
         console.warn('Autoplay prevented:', error);
-        // We'll handle this in the UI elsewhere
       }
     };
     
     const handleCanPlay = () => {
+      console.log('Video can play event triggered');
       playVideo();
     };
     
     videoElement.addEventListener('canplay', handleCanPlay);
     
+    if (videoElement.readyState >= 3) {
+      playVideo();
+    }
+    
     return () => {
       videoElement.removeEventListener('canplay', handleCanPlay);
     };
-  }, []);
+  }, [stream]);
 
   if (!stream) {
-    return null;
+    return (
+      <div className={cn(
+        "w-full h-full flex items-center justify-center bg-secondary/10",
+        className
+      )}>
+        <p className="text-xs text-muted-foreground">No video</p>
+      </div>
+    );
   }
 
   return (

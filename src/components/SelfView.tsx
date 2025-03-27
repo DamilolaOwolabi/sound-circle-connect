@@ -25,6 +25,15 @@ const SelfView = ({ stream, isAudioOn, isVideoOn, background }: SelfViewProps) =
     setVisible(prev => !prev);
   };
 
+  // Let's log the stream state to help with debugging
+  useEffect(() => {
+    if (stream) {
+      console.log('SelfView stream:', stream.id, 'Video tracks:', stream.getVideoTracks().length);
+    } else {
+      console.log('SelfView: No stream available');
+    }
+  }, [stream]);
+
   if (!initiallyRendered && !stream) {
     return null;
   }
@@ -49,7 +58,7 @@ const SelfView = ({ stream, isAudioOn, isVideoOn, background }: SelfViewProps) =
               isScreenShare={false}
               isAudioOn={false} // Always mute self-view
               background={background}
-              className="rounded-lg"
+              className="rounded-lg w-full h-full"
             />
           )}
           {!isVideoOn && visible && (
