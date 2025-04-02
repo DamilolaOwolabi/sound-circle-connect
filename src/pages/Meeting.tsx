@@ -307,6 +307,9 @@ const Meeting = () => {
           onDeviceChange={handleDeviceChange}
           onQualityChange={handleQualityChange}
           onLeave={() => navigate('/')}
+          onChangeMeetingBackground={(bg) => setMeetingBackground(bg)}
+          meetingBackgrounds={BACKGROUND_OPTIONS}
+          currentMeetingBackground={meetingBackground}
         />
       </div>
     </div>
