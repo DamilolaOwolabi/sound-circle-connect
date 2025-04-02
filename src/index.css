@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -75,6 +76,50 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+/* Meeting room styles */
+.meeting-room-container {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.meeting-room-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.4);
+  z-index: 0;
+}
+
+.meeting-content-container {
+  position: relative;
+  z-index: 1;
+  padding: 1.5rem;
+  width: 100%;
+  min-height: 100vh;
+  color: white;
+}
+
+/* Preserve components styling */
+.meeting-content-container .bg-background,
+.meeting-content-container .bg-muted,
+.meeting-content-container .bg-card,
+.meeting-content-container .bg-popover {
+  background-color: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.meeting-content-container .text-primary {
+  color: white;
 }
 
 .participant-tile {

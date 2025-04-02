@@ -42,7 +42,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
   }, [activeStream]);
 
   return (
-    <div className={`flex-1 relative min-h-[600px] ${layout === 'grid' ? 'grid grid-cols-3 gap-4' : 'flex justify-center'}`}>
+    <div className={`flex-1 relative min-h-[600px] ${layout === 'grid' ? 'grid grid-cols-3 gap-4' : 'flex justify-center'} rounded-xl overflow-hidden`}>
       <ParticipantTile
         key="local-user"
         name="You"

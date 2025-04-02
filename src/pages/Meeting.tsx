@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Controls from '@/components/Controls';
@@ -26,12 +25,19 @@ const MOCK_PARTICIPANTS = [
   { id: '4', name: 'Alice Johnson', isAudioOn: true, isVideoOn: true, radiusSize: 60 },
 ];
 
+const BACKGROUND_OPTIONS = [
+  { id: 'default', url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?fit=crop&w=1920&h=1080&q=80' },
+  { id: 'nature', url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?fit=crop&w=1920&h=1080&q=80' },
+  { id: 'workspace', url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?fit=crop&w=1920&h=1080&q=80' },
+];
+
 const Meeting = () => {
   const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
   const [radiusSize, setRadiusSize] = useState(50);
   const [maxRadius, setMaxRadius] = useState(MAX_RADIUS);
   const [background, setBackground] = useState<{ id: string; url?: string; type?: string } | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [meetingBackground, setMeetingBackground] = useState(BACKGROUND_OPTIONS[0]);
   const location = useLocation();
   const navigate = useNavigate();
   const isHost = location.state?.isHost;
@@ -200,100 +206,112 @@ const Meeting = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-4">
-          <ResponsiveImage 
-            src="/lovable-uploads/efac273c-f666-48c6-aa08-e42558a7b939.png" 
-            alt="SoundRadius Logo" 
-            className="h-8 w-auto"
-            priority={true}
-          />
-          <h1 className="text-2xl font-bold text-primary">{meetingName}</h1>
-        </div>
-        {isHost && (
-          <MeetingInvite meetingId={meetingId} isHost={isHost} />
-        )}
-      </div>
-      
-      <div className="flex gap-6">
-        <div className="flex-1">
-          <ParticipantsGrid
-            layout={layout}
-            localUser={{
-              isAudioOn,
-              isVideoOn,
-              radiusSize,
-              stream,
-              screenStream,
-              background
-            }}
-            mockParticipants={participants}
-          />
-        </div>
-        
-        <div className="w-96 space-y-4">
-          <ParticipantsList participants={participants} />
-          <RadiusControl
-            radiusSize={radiusSize}
-            onRadiusChange={handleRadiusChange}
-            minRadius={MIN_RADIUS}
-            maxRadius={maxRadius}
-          />
-          <AIFeatures stream={stream} />
-          <AITranscriptionPanel
-            stream={stream}
-            onTranscriptionUpdate={handleTranscriptionUpdate}
-          />
-          <AIMeetingAssistant
-            transcript={aiTranscript}
-            onResponse={handleAIResponse}
-          />
+    <div 
+      className="min-h-screen bg-background p-6 meeting-room-container"
+      style={{
+        backgroundImage: `url(${meetingBackground.url})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    >
+      <div className="meeting-content-container">
+        <div className="flex justify-between items-center mb-4">
+          <div className="flex items-center gap-4">
+            <ResponsiveImage 
+              src="/lovable-uploads/efac273c-f666-48c6-aa08-e42558a7b939.png" 
+              alt="SoundRadius Logo" 
+              className="h-8 w-auto"
+              priority={true}
+            />
+            <h1 className="text-2xl font-bold text-primary">{meetingName}</h1>
+          </div>
           {isHost && (
-            <>
-              <HostControlPanel
-                participants={participants}
-                onMuteAll={handleMuteAll}
-                onDisableAllVideos={handleDisableAllVideos}
-                onRemoveParticipant={handleRemoveParticipant}
-                onInviteParticipant={handleInviteParticipant}
-              />
-              <BreakoutRooms
-                participants={participants}
-                onCreateRoom={handleCreateBreakoutRoom}
-                onDeleteRoom={handleDeleteBreakoutRoom}
-                onAssignParticipant={handleAssignParticipant}
-              />
-            </>
+            <MeetingInvite meetingId={meetingId} isHost={isHost} />
           )}
         </div>
+        
+        <div className="flex gap-6">
+          <div className="flex-1">
+            <ParticipantsGrid
+              layout={layout}
+              localUser={{
+                isAudioOn,
+                isVideoOn,
+                radiusSize,
+                stream,
+                screenStream,
+                background
+              }}
+              mockParticipants={participants}
+            />
+          </div>
+          
+          <div className="w-96 space-y-4">
+            <ParticipantsList participants={participants} />
+            <RadiusControl
+              radiusSize={radiusSize}
+              onRadiusChange={handleRadiusChange}
+              minRadius={MIN_RADIUS}
+              maxRadius={maxRadius}
+            />
+            <AIFeatures stream={stream} />
+            <AITranscriptionPanel
+              stream={stream}
+              onTranscriptionUpdate={handleTranscriptionUpdate}
+            />
+            <AIMeetingAssistant
+              transcript={aiTranscript}
+              onResponse={handleAIResponse}
+            />
+            {isHost && (
+              <>
+                <HostControlPanel
+                  participants={participants}
+                  onMuteAll={handleMuteAll}
+                  onDisableAllVideos={handleDisableAllVideos}
+                  onRemoveParticipant={handleRemoveParticipant}
+                  onInviteParticipant={handleInviteParticipant}
+                />
+                <BreakoutRooms
+                  participants={participants}
+                  onCreateRoom={handleCreateBreakoutRoom}
+                  onDeleteRoom={handleDeleteBreakoutRoom}
+                  onAssignParticipant={handleAssignParticipant}
+                />
+              </>
+            )}
+          </div>
+        </div>
+
+        <SelfView 
+          stream={stream}
+          isAudioOn={isAudioOn}
+          isVideoOn={isVideoOn}
+          background={background}
+        />
+
+        <Controls
+          isAudioOn={isAudioOn}
+          isVideoOn={isVideoOn}
+          isRecording={isRecording}
+          isScreenSharing={isScreenSharing}
+          layout={layout}
+          stream={stream}
+          onToggleAudio={toggleAudio}
+          onToggleVideo={toggleVideo}
+          onToggleScreenShare={toggleScreenShare}
+          onToggleRecording={toggleRecording}
+          onToggleLayout={toggleLayout}
+          onSelectBackground={handleBackgroundSelect}
+          onDeviceChange={handleDeviceChange}
+          onQualityChange={handleQualityChange}
+          onLeave={() => navigate('/')}
+          onChangeMeetingBackground={(bg) => setMeetingBackground(bg)}
+          meetingBackgrounds={BACKGROUND_OPTIONS}
+          currentMeetingBackground={meetingBackground}
+        />
       </div>
-
-      {/* Add the SelfView component */}
-      <SelfView 
-        stream={stream}
-        isAudioOn={isAudioOn}
-        isVideoOn={isVideoOn}
-        background={background}
-      />
-
-      <Controls
-        isAudioOn={isAudioOn}
-        isVideoOn={isVideoOn}
-        isRecording={isRecording}
-        isScreenSharing={isScreenSharing}
-        layout={layout}
-        stream={stream}
-        onToggleAudio={toggleAudio}
-        onToggleVideo={toggleVideo}
-        onToggleScreenShare={toggleScreenShare}
-        onToggleRecording={toggleRecording}
-        onToggleLayout={toggleLayout}
-        onSelectBackground={handleBackgroundSelect}
-        onDeviceChange={handleDeviceChange}
-        onQualityChange={handleQualityChange}
-        onLeave={() => navigate('/')}
-      />
     </div>
   );
 };
