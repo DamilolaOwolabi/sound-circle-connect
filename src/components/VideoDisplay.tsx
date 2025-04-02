@@ -1,6 +1,6 @@
+
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { cn } from '@/lib/utils';
-import { processVideoFrame } from '@/utils/backgroundUtils';
 
 interface VideoDisplayProps {
   stream: MediaStream | null;
@@ -9,7 +9,6 @@ interface VideoDisplayProps {
   isAudioOn: boolean;
   videoStyle?: React.CSSProperties;
   className?: string;
-  background?: { id: string; url?: string; type?: string } | null;
   onVideoError?: (error: Error) => void;
 }
 
@@ -20,12 +19,9 @@ const VideoDisplay = ({
   isAudioOn,
   videoStyle,
   className,
-  background,
   onVideoError
 }: VideoDisplayProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isProcessingBackground, setIsProcessingBackground] = useState(false);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [videoStats, setVideoStats] = useState<{
     droppedFrames: number;
@@ -33,7 +29,6 @@ const VideoDisplay = ({
     resolution: string;
     timestamp: number;
   }>({ droppedFrames: 0, fps: 0, resolution: '', timestamp: 0 });
-  const animationFrameRef = useRef<number>();
   const statsIntervalRef = useRef<number>();
   const lastFrameTimeRef = useRef<number>(0);
   const frameCountRef = useRef<number>(0);
@@ -130,14 +125,6 @@ const VideoDisplay = ({
   }, [stream]);
 
   useEffect(() => {
-    if (!isVideoOn && animationFrameRef.current) {
-      console.log('Video turned off, stopping frame processing');
-      cancelAnimationFrame(animationFrameRef.current);
-      setIsProcessingBackground(false);
-    }
-  }, [isVideoOn]);
-
-  useEffect(() => {
     if (stream && videoRef.current) {
       console.log('Setting video stream:', stream.id, 'Video tracks:', stream.getVideoTracks().length);
       
@@ -160,10 +147,6 @@ const VideoDisplay = ({
       const handleTrackEnded = () => {
         console.log('Video track ended, updating UI');
         setIsVideoPlaying(false);
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-          setIsProcessingBackground(false);
-        }
       };
       
       videoTracks.forEach(track => {
@@ -195,57 +178,22 @@ const VideoDisplay = ({
   }, [stream, isVideoOn, isScreenShare, handleVideoError, adjustStreamQuality, adaptiveQuality]);
 
   useEffect(() => {
-    const processFrame = async () => {
-      if (!videoRef.current || !canvasRef.current || !isVideoOn || isScreenShare) return;
-
-      monitorStreamHealth();
-
-      const ctx = canvasRef.current.getContext('2d', { alpha: false });
-      if (!ctx) return;
-
-      if (videoRef.current.videoWidth > 0 && canvasRef.current.width !== videoRef.current.videoWidth) {
-        canvasRef.current.width = videoRef.current.videoWidth;
-        canvasRef.current.height = videoRef.current.videoHeight;
+    // Monitor stream health at regular intervals
+    const intervalId = setInterval(() => {
+      if (isVideoOn && stream) {
+        monitorStreamHealth();
       }
-
-      if (background) {
-        try {
-          const processedFrame = await processVideoFrame(videoRef.current, background);
-          if (processedFrame) {
-            ctx.putImageData(processedFrame, 0, 0);
-          }
-        } catch (error) {
-          console.error('Error processing video frame:', error);
-          ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-        }
-      } else {
-        ctx.drawImage(videoRef.current, 0, 0, canvasRef.current.width, canvasRef.current.height);
-      }
-
-      animationFrameRef.current = requestAnimationFrame(processFrame);
-    };
-
-    if (isVideoOn && stream && !isScreenShare) {
-      setIsProcessingBackground(true);
-      processFrame();
-    } else {
-      setIsProcessingBackground(false);
-    }
-
+    }, 2000);
+    
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
+      clearInterval(intervalId);
     };
-  }, [stream, isVideoOn, isScreenShare, background, monitorStreamHealth]);
+  }, [stream, isVideoOn, monitorStreamHealth]);
 
   useEffect(() => {
     return () => {
       if (statsIntervalRef.current) {
         clearInterval(statsIntervalRef.current);
-      }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, []);
@@ -316,7 +264,7 @@ const VideoDisplay = ({
         playsInline
         muted={!isAudioOn}
         className={cn(
-          (isProcessingBackground || !isVideoOn) ? 'hidden' : '',
+          !isVideoOn ? 'hidden' : '',
           isScreenShare ? "object-contain" : "object-cover",
           "w-full h-full",
           className
@@ -327,21 +275,6 @@ const VideoDisplay = ({
         }}
         onError={handleVideoPlaybackError}
       />
-      {isProcessingBackground && isVideoOn && (
-        <canvas
-          ref={canvasRef}
-          width={videoRef.current?.videoWidth || 1280}
-          height={videoRef.current?.videoHeight || 720}
-          className={cn(
-            "w-full h-full object-cover",
-            className
-          )}
-          style={{
-            imageRendering: 'auto',
-            ...videoStyle
-          }}
-        />
-      )}
       {!isVideoOn && (
         <div className={cn(
           "w-full h-full flex items-center justify-center bg-muted/20",

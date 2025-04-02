@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -17,7 +18,6 @@ import {
   Image
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
-import BackgroundSelector from './BackgroundSelector';
 import VideoSettings from './VideoSettings';
 import ChatPanel from './ChatPanel';
 import QualitySelector from './QualitySelector';
@@ -35,7 +35,6 @@ interface ControlsProps {
   onToggleScreenShare: () => void;
   onToggleRecording: () => void;
   onToggleLayout: () => void;
-  onSelectBackground: (background: { id: string; url?: string; type?: string }) => void;
   onDeviceChange: (audioDeviceId: string, videoDeviceId: string) => void;
   onQualityChange?: (quality: 'low' | 'medium' | 'high' | 'hd') => void;
   onLeave: () => void;
@@ -56,7 +55,6 @@ const Controls = ({
   onToggleScreenShare,
   onToggleRecording,
   onToggleLayout,
-  onSelectBackground,
   onDeviceChange,
   onQualityChange,
   onLeave,
@@ -127,11 +125,6 @@ const Controls = ({
         >
           {isRecording ? <Square className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
         </Button>
-
-        <BackgroundSelector 
-          onSelectBackground={onSelectBackground} 
-          className="bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
-        />
         
         {onChangeMeetingBackground && meetingBackgrounds.length > 0 && (
           <Popover>

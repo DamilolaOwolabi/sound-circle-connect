@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Controls from '@/components/Controls';
@@ -35,7 +36,6 @@ const Meeting = () => {
   const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
   const [radiusSize, setRadiusSize] = useState(50);
   const [maxRadius, setMaxRadius] = useState(MAX_RADIUS);
-  const [background, setBackground] = useState<{ id: string; url?: string; type?: string } | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [meetingBackground, setMeetingBackground] = useState(BACKGROUND_OPTIONS[0]);
   const location = useLocation();
@@ -100,15 +100,6 @@ const Meeting = () => {
   const toggleLayout = () => {
     setLayout(prev => prev === 'grid' ? 'spotlight' : 'grid');
     console.log('Layout changed to:', layout === 'grid' ? 'spotlight' : 'grid');
-  };
-
-  const handleBackgroundSelect = (newBackground: { id: string; url?: string; type?: string }) => {
-    console.log('Setting new background:', newBackground);
-    setBackground(newBackground);
-    toast({
-      title: "Background Updated",
-      description: `Background has been changed to ${newBackground.id}`,
-    });
   };
 
   const handleShareInvite = async () => {
@@ -240,8 +231,7 @@ const Meeting = () => {
                 isVideoOn,
                 radiusSize,
                 stream,
-                screenStream,
-                background
+                screenStream
               }}
               mockParticipants={participants}
             />
@@ -288,7 +278,6 @@ const Meeting = () => {
           stream={stream}
           isAudioOn={isAudioOn}
           isVideoOn={isVideoOn}
-          background={background}
         />
 
         <Controls
@@ -303,7 +292,6 @@ const Meeting = () => {
           onToggleScreenShare={toggleScreenShare}
           onToggleRecording={toggleRecording}
           onToggleLayout={toggleLayout}
-          onSelectBackground={handleBackgroundSelect}
           onDeviceChange={handleDeviceChange}
           onQualityChange={handleQualityChange}
           onLeave={() => navigate('/')}

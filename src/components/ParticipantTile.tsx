@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Video, VideoOff, Monitor, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,7 +13,6 @@ interface ParticipantTileProps {
   radiusSize: number;
   className?: string;
   stream?: MediaStream | null;
-  background?: { id: string; url?: string; type?: string } | null;
   isSelfView?: boolean;
 }
 
@@ -23,7 +23,6 @@ const ParticipantTile = ({
   radiusSize,
   className,
   stream,
-  background,
   isSelfView = false
 }: ParticipantTileProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -39,10 +38,6 @@ const ParticipantTile = ({
       console.log('ParticipantTile stream for', name, ':', stream.id, 'Video tracks:', stream.getVideoTracks().length);
     }
   }, [stream, name]);
-
-  useEffect(() => {
-    console.log('Background updated for', name, ':', background);
-  }, [background, name]);
 
   const handleDragStart = (e: React.DragEvent) => {
     setIsDragging(true);
@@ -182,7 +177,6 @@ const ParticipantTile = ({
             isVideoOn={isVideoOn}
             isScreenShare={!!isScreenShare}
             isAudioOn={isAudioOn}
-            background={background}
             onVideoError={handleVideoError}
             className="w-full h-full"
           />

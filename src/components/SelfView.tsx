@@ -9,10 +9,9 @@ interface SelfViewProps {
   stream: MediaStream | null;
   isAudioOn: boolean;
   isVideoOn: boolean;
-  background?: { id: string; url?: string; type?: string } | null;
 }
 
-const SelfView = ({ stream, isAudioOn, isVideoOn, background }: SelfViewProps) => {
+const SelfView = ({ stream, isAudioOn, isVideoOn }: SelfViewProps) => {
   const [visible, setVisible] = useState(true);
   const [initiallyRendered, setInitiallyRendered] = useState(false);
 
@@ -57,7 +56,6 @@ const SelfView = ({ stream, isAudioOn, isVideoOn, background }: SelfViewProps) =
               isVideoOn={isVideoOn}
               isScreenShare={false}
               isAudioOn={false} // Always mute self-view
-              background={background}
               className="rounded-lg w-full h-full"
             />
           )}
