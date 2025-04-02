@@ -14,15 +14,13 @@ import {
   Square,
   MessageCircle,
   Share,
-  Settings,
-  Image
+  Settings
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import BackgroundSelector from './BackgroundSelector';
 import VideoSettings from './VideoSettings';
 import ChatPanel from './ChatPanel';
 import QualitySelector from './QualitySelector';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface ControlsProps {
   isAudioOn: boolean;
@@ -40,9 +38,6 @@ interface ControlsProps {
   onDeviceChange: (audioDeviceId: string, videoDeviceId: string) => void;
   onQualityChange?: (quality: 'low' | 'medium' | 'high' | 'hd') => void;
   onLeave: () => void;
-  onChangeMeetingBackground?: (background: { id: string; url: string }) => void;
-  meetingBackgrounds?: { id: string; url: string }[];
-  currentMeetingBackground?: { id: string; url: string };
 }
 
 const Controls = ({
@@ -60,10 +55,7 @@ const Controls = ({
   onSelectBackground,
   onDeviceChange,
   onQualityChange,
-  onLeave,
-  onChangeMeetingBackground,
-  meetingBackgrounds = [],
-  currentMeetingBackground
+  onLeave
 }: ControlsProps) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showQualitySettings, setShowQualitySettings] = useState(false);
@@ -119,46 +111,6 @@ const Controls = ({
         </Button>
 
         <BackgroundSelector onSelectBackground={onSelectBackground} />
-        
-        {onChangeMeetingBackground && meetingBackgrounds.length > 0 && (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" size="icon" className="relative">
-                <Image className="w-4 h-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-64 p-2">
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Room Background</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {meetingBackgrounds.map((bg) => (
-                    <button
-                      key={bg.id}
-                      className={`relative rounded-md overflow-hidden h-16 border-2 ${
-                        currentMeetingBackground?.id === bg.id
-                          ? 'border-primary'
-                          : 'border-transparent hover:border-muted'
-                      }`}
-                      onClick={() => {
-                        onChangeMeetingBackground(bg);
-                        toast({
-                          title: "Room Background Updated",
-                          description: `Background changed to ${bg.id}`,
-                        });
-                      }}
-                    >
-                      <img 
-                        src={bg.url} 
-                        alt={bg.id} 
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        )}
         
         <Button
           variant="outline"
