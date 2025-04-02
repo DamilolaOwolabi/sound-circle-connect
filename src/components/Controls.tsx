@@ -83,12 +83,12 @@ const Controls = ({
 
   return (
     <>
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-background/95 backdrop-blur-sm p-4 rounded-full shadow-lg">
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-[#9b87f5]/90 backdrop-blur-sm p-4 rounded-full shadow-lg border border-[#a394f8]/50">
         <Button
           variant={isAudioOn ? "outline" : "destructive"}
           size="icon"
           onClick={onToggleAudio}
-          className="relative"
+          className="relative bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
         >
           {isAudioOn ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
         </Button>
@@ -97,7 +97,7 @@ const Controls = ({
           variant={isVideoOn ? "outline" : "destructive"}
           size="icon"
           onClick={handleVideoToggle}
-          className="relative"
+          className="relative bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
         >
           {isVideoOn ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
         </Button>
@@ -106,6 +106,7 @@ const Controls = ({
           variant={isScreenSharing ? "secondary" : "outline"}
           size="icon"
           onClick={onToggleScreenShare}
+          className={isScreenSharing ? "bg-white/40 text-[#472cb1] border-[#d6bcfa]" : "bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"}
         >
           <Monitor className="w-4 h-4" />
         </Button>
@@ -114,16 +115,24 @@ const Controls = ({
           variant={isRecording ? "destructive" : "outline"}
           size="icon"
           onClick={onToggleRecording}
+          className={isRecording ? "" : "bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"}
         >
           {isRecording ? <Square className="w-4 h-4" /> : <Circle className="w-4 h-4 fill-current" />}
         </Button>
 
-        <BackgroundSelector onSelectBackground={onSelectBackground} />
+        <BackgroundSelector 
+          onSelectBackground={onSelectBackground} 
+          className="bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
+        />
         
         {onChangeMeetingBackground && meetingBackgrounds.length > 0 && (
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" size="icon" className="relative">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="relative bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
+              >
                 <Image className="w-4 h-4" />
               </Button>
             </PopoverTrigger>
@@ -164,16 +173,22 @@ const Controls = ({
           variant="outline"
           size="icon"
           onClick={() => setShowQualitySettings(true)}
+          className="bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
         >
           <Settings className="w-4 h-4" />
         </Button>
 
-        <VideoSettings stream={stream} onDeviceChange={onDeviceChange} />
+        <VideoSettings 
+          stream={stream} 
+          onDeviceChange={onDeviceChange}
+          className="bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30" 
+        />
         
         <Button
           variant="outline"
           size="icon"
           onClick={onToggleLayout}
+          className="bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
         >
           {layout === 'grid' ? <Maximize2 className="w-4 h-4" /> : <Grid className="w-4 h-4" />}
         </Button>
@@ -182,11 +197,17 @@ const Controls = ({
           variant="outline"
           size="icon"
           onClick={() => setIsChatOpen(true)}
+          className="bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
         >
           <MessageCircle className="w-4 h-4" />
         </Button>
 
-        <Button variant="destructive" size="icon" onClick={onLeave}>
+        <Button 
+          variant="destructive" 
+          size="icon" 
+          onClick={onLeave}
+          className="bg-destructive hover:bg-destructive/90"
+        >
           <PhoneOff className="w-4 h-4" />
         </Button>
       </div>

@@ -35,6 +35,12 @@
     --ring: 215 20.2% 65.1%;
  
     --radius: 0.5rem;
+    
+    /* Sound Radius theme colors */
+    --sound-radius-primary: 261 85% 74%;
+    --sound-radius-secondary: 261 35% 54%;
+    --sound-radius-tertiary: 263 35% 50%;
+    --sound-radius-light: 263 90% 85%;
   }
  
   .dark {
@@ -66,6 +72,12 @@
     --destructive-foreground: 0 85.7% 97.3%;
  
     --ring: 217.2 32.6% 17.5%;
+    
+    /* Sound Radius theme colors in dark mode */
+    --sound-radius-primary: 261 70% 60%;
+    --sound-radius-secondary: 261 35% 42%; 
+    --sound-radius-tertiary: 263 35% 38%;
+    --sound-radius-light: 263 52% 65%;
   }
 }
  
@@ -138,6 +150,25 @@
   border-radius: inherit;
   z-index: -1;
   animation: glow 3s ease-in-out infinite;
+}
+
+/* Controls bar styling */
+.meeting-controls-bar {
+  @apply fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 p-4 rounded-full shadow-lg;
+  background-color: hsl(var(--sound-radius-primary) / 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--sound-radius-light) / 0.5);
+}
+
+.meeting-control-button {
+  @apply bg-white/20 hover:bg-white/30 text-white;
+  border-color: hsl(var(--sound-radius-light) / 0.3);
+}
+
+.meeting-control-button-active {
+  @apply bg-white/40;
+  color: hsl(var(--sound-radius-tertiary));
+  border-color: hsl(var(--sound-radius-light));
 }
 
 @keyframes glow {
