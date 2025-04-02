@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -285,30 +286,64 @@ export const useMediaStream = () => {
     const newState = !isVideoOn;
     setIsVideoOn(newState);
     
-    if (stream) {
-      if (!newState) {
-        stream.getVideoTracks().forEach(track => {
-          track.enabled = false;
-          console.log(`Video track ${track.label} disabled`);
-        });
-      } else {
+    try {
+      if (stream) {
         const videoTracks = stream.getVideoTracks();
-        if (videoTracks.length === 0 || videoTracks[0].readyState === 'ended') {
-          console.log('Video tracks ended or missing, reinitializing media');
-          await initializeMedia(selectedAudioDevice, selectedVideoDevice);
-        } else {
+        
+        if (!newState) {
+          // Completely stop video tracks when turning off camera
+          console.log('Stopping all video tracks to release camera hardware');
           videoTracks.forEach(track => {
-            track.enabled = true;
-            console.log(`Video track ${track.label} enabled`);
+            track.enabled = false;
+            // Actually stop the track to release camera hardware
+            track.stop();
+            console.log(`Video track ${track.label} stopped and disabled`);
           });
           
-          applyVideoConstraints(stream, videoQuality);
+          // Notify user that camera is now completely off
+          toast({
+            title: "Camera Off",
+            description: "Your camera has been turned off and hardware access stopped.",
+          });
+        } else {
+          // When turning video back on, check if we need to reinitialize
+          if (videoTracks.length === 0 || videoTracks.some(track => track.readyState === 'ended')) {
+            console.log('Video tracks ended or missing, reinitializing camera');
+            await initializeMedia(selectedAudioDevice, selectedVideoDevice);
+            toast({
+              title: "Camera On",
+              description: "Your camera has been turned on.",
+            });
+          } else {
+            // We still have active tracks, just enable them
+            videoTracks.forEach(track => {
+              track.enabled = true;
+              console.log(`Video track ${track.label} enabled`);
+            });
+            
+            applyVideoConstraints(stream, videoQuality);
+          }
         }
+      } else if (newState) {
+        // No existing stream, initialize one when turning on
+        await initializeMedia(selectedAudioDevice, selectedVideoDevice);
+        toast({
+          title: "Camera On",
+          description: "Your camera has been turned on.",
+        });
       }
-    } else if (newState) {
-      await initializeMedia(selectedAudioDevice, selectedVideoDevice);
+    } catch (error) {
+      console.error('Error toggling video:', error);
+      toast({
+        variant: "destructive",
+        title: "Camera Error",
+        description: "There was a problem controlling your camera. Please check permissions.",
+      });
+      
+      // Revert UI state if operation failed
+      setIsVideoOn(!newState);
     }
-  }, [isVideoOn, stream, initializeMedia, selectedAudioDevice, selectedVideoDevice, applyVideoConstraints, videoQuality]);
+  }, [isVideoOn, stream, initializeMedia, selectedAudioDevice, selectedVideoDevice, applyVideoConstraints, videoQuality, toast]);
 
   const toggleScreenShare = useCallback(async () => {
     try {

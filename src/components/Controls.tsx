@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -67,9 +66,11 @@ const Controls = ({
 }: ControlsProps) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showQualitySettings, setShowQualitySettings] = useState(false);
+  const [isTogglingVideo, setIsTogglingVideo] = useState(false);
 
   const handleVideoToggle = async () => {
     try {
+      setIsTogglingVideo(true);
       await onToggleVideo();
     } catch (error) {
       console.error('Failed to toggle video:', error);
@@ -78,6 +79,8 @@ const Controls = ({
         title: "Camera Error",
         description: "Failed to access camera. Please check your permissions and try again.",
       });
+    } finally {
+      setIsTogglingVideo(false);
     }
   };
 
@@ -97,9 +100,14 @@ const Controls = ({
           variant={isVideoOn ? "outline" : "destructive"}
           size="icon"
           onClick={handleVideoToggle}
+          disabled={isTogglingVideo}
           className="relative bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
         >
-          {isVideoOn ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
+          {isTogglingVideo ? (
+            <div className="w-4 h-4 rounded-full border-2 border-t-transparent border-white animate-spin"></div>
+          ) : (
+            isVideoOn ? <VideoIcon className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />
+          )}
         </Button>
 
         <Button

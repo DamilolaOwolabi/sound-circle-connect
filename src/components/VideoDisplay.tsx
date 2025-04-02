@@ -130,6 +130,14 @@ const VideoDisplay = ({
   }, [stream]);
 
   useEffect(() => {
+    if (!isVideoOn && animationFrameRef.current) {
+      console.log('Video turned off, stopping frame processing');
+      cancelAnimationFrame(animationFrameRef.current);
+      setIsProcessingBackground(false);
+    }
+  }, [isVideoOn]);
+
+  useEffect(() => {
     if (stream && videoRef.current) {
       console.log('Setting video stream:', stream.id, 'Video tracks:', stream.getVideoTracks().length);
       
@@ -149,6 +157,19 @@ const VideoDisplay = ({
       
       videoRef.current.addEventListener('playing', handlePlaying);
       
+      const handleTrackEnded = () => {
+        console.log('Video track ended, updating UI');
+        setIsVideoPlaying(false);
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          setIsProcessingBackground(false);
+        }
+      };
+      
+      videoTracks.forEach(track => {
+        track.addEventListener('ended', handleTrackEnded);
+      });
+      
       if (isVideoOn || isScreenShare) {
         const videoTracks = stream.getVideoTracks();
         
@@ -166,6 +187,9 @@ const VideoDisplay = ({
           videoRef.current.removeEventListener('error', handleVideoError);
           videoRef.current.removeEventListener('playing', handlePlaying);
         }
+        videoTracks.forEach(track => {
+          track.removeEventListener('ended', handleTrackEnded);
+        });
       };
     }
   }, [stream, isVideoOn, isScreenShare, handleVideoError, adjustStreamQuality, adaptiveQuality]);
@@ -292,7 +316,7 @@ const VideoDisplay = ({
         playsInline
         muted={!isAudioOn}
         className={cn(
-          isProcessingBackground ? 'hidden' : '',
+          (isProcessingBackground || !isVideoOn) ? 'hidden' : '',
           isScreenShare ? "object-contain" : "object-cover",
           "w-full h-full",
           className
@@ -303,7 +327,7 @@ const VideoDisplay = ({
         }}
         onError={handleVideoPlaybackError}
       />
-      {isProcessingBackground && (
+      {isProcessingBackground && isVideoOn && (
         <canvas
           ref={canvasRef}
           width={videoRef.current?.videoWidth || 1280}
@@ -317,6 +341,14 @@ const VideoDisplay = ({
             ...videoStyle
           }}
         />
+      )}
+      {!isVideoOn && (
+        <div className={cn(
+          "w-full h-full flex items-center justify-center bg-muted/20",
+          className
+        )}>
+          <p className="text-xs text-muted-foreground">Camera off</p>
+        </div>
       )}
     </>
   );
