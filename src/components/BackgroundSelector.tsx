@@ -48,9 +48,10 @@ const backgrounds = [
 
 interface BackgroundSelectorProps {
   onSelectBackground: (background: { id: string; url?: string; type?: string }) => void;
+  className?: string; // Add className prop to the interface
 }
 
-const BackgroundSelector = ({ onSelectBackground }: BackgroundSelectorProps) => {
+const BackgroundSelector = ({ onSelectBackground, className }: BackgroundSelectorProps) => {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -74,7 +75,7 @@ const BackgroundSelector = ({ onSelectBackground }: BackgroundSelectorProps) => 
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
+        <Button variant="outline" size="icon" className={className}>
           <Paintbrush className="h-4 w-4" />
         </Button>
       </SheetTrigger>

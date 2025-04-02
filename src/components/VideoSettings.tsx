@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import {
   Dialog,
@@ -26,9 +27,10 @@ interface Device {
 interface VideoSettingsProps {
   stream: MediaStream | null;
   onDeviceChange: (audioDeviceId: string, videoDeviceId: string) => void;
+  className?: string; // Add className prop to the interface
 }
 
-const VideoSettings = ({ stream, onDeviceChange }: VideoSettingsProps) => {
+const VideoSettings = ({ stream, onDeviceChange, className }: VideoSettingsProps) => {
   const [audioDevices, setAudioDevices] = useState<Device[]>([]);
   const [videoDevices, setVideoDevices] = useState<Device[]>([]);
   const [selectedAudioDevice, setSelectedAudioDevice] = useState<string>("");
@@ -80,7 +82,7 @@ const VideoSettings = ({ stream, onDeviceChange }: VideoSettingsProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" className={className}>
           <Settings className="h-4 w-4" />
         </Button>
       </DialogTrigger>
