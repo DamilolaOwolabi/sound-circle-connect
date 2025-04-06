@@ -14,6 +14,7 @@ interface ParticipantTileProps {
   className?: string;
   stream?: MediaStream | null;
   isSelfView?: boolean;
+  background?: { id: string; url?: string; type?: string } | null;
 }
 
 const ParticipantTile = ({
@@ -23,7 +24,8 @@ const ParticipantTile = ({
   radiusSize,
   className,
   stream,
-  isSelfView = false
+  isSelfView = false,
+  background
 }: ParticipantTileProps) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);

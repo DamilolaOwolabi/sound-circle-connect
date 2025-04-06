@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -62,6 +61,8 @@ export const useMediaStream = () => {
   const streamRef = useRef<MediaStream | null>(null);
   const reconnectTimeoutRef = useRef<number>();
   const { toast } = useToast();
+  const videoStreamRef = useRef<MediaStream | null>(null);
+  const audioStreamRef = useRef<MediaStream | null>(null);
 
   const reconnectAttemptsRef = useRef(0);
   const MAX_RECONNECT_ATTEMPTS = 5;
@@ -168,42 +169,84 @@ export const useMediaStream = () => {
         });
       }
 
-      const constraints = {
-        audio: audioDeviceId ? { deviceId: audioDeviceId } : true,
-        video: getVideoConstraints(videoQuality, videoDeviceId),
-      };
-
-      console.log('Requesting media with constraints:', constraints);
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const combinedStream = new MediaStream();
       
-      console.log('Media stream obtained:', mediaStream.getTracks().map(t => ({ kind: t.kind, label: t.label })));
+      if (isAudioOn) {
+        try {
+          const audioConstraints = audioDeviceId ? { deviceId: audioDeviceId } : true;
+          console.log('Requesting audio with constraints:', audioConstraints);
+          
+          if (audioStreamRef.current) {
+            audioStreamRef.current.getTracks().forEach(track => {
+              track.stop();
+              console.log(`Stopped audio track: ${track.label}`);
+            });
+          }
+          
+          const audioStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints, video: false });
+          audioStreamRef.current = audioStream;
+          
+          audioStream.getAudioTracks().forEach(track => {
+            combinedStream.addTrack(track);
+            console.log(`Added audio track: ${track.label}`);
+          });
+        } catch (error) {
+          console.error('Error accessing audio devices:', error);
+          toast({
+            title: "Audio Error",
+            description: "Unable to access microphone. Please check your permissions.",
+          });
+        }
+      }
       
-      streamRef.current = mediaStream;
+      if (isVideoOn) {
+        try {
+          const videoConstraints = getVideoConstraints(videoQuality, videoDeviceId);
+          console.log('Requesting video with constraints:', videoConstraints);
+          
+          if (videoStreamRef.current) {
+            videoStreamRef.current.getTracks().forEach(track => {
+              track.stop();
+              console.log(`Stopped video track: ${track.label}`);
+            });
+          }
+          
+          const videoStream = await navigator.mediaDevices.getUserMedia({ audio: false, video: videoConstraints });
+          videoStreamRef.current = videoStream;
+          
+          videoStream.getVideoTracks().forEach(track => {
+            combinedStream.addTrack(track);
+            console.log(`Added video track: ${track.label}`);
+            
+            applyVideoConstraints(videoStream, videoQuality);
+          });
+        } catch (error) {
+          console.error('Error accessing video devices:', error);
+          toast({
+            title: "Video Error",
+            description: "Unable to access camera. Please check your permissions.",
+          });
+        }
+      }
       
-      mediaStream.getAudioTracks().forEach(track => {
-        track.enabled = isAudioOn;
-        console.log(`Initial audio track ${track.label} enabled:`, isAudioOn);
-      });
-      
-      mediaStream.getVideoTracks().forEach(track => {
-        track.enabled = isVideoOn;
-        console.log(`Initial video track ${track.label} enabled:`, isVideoOn);
-      });
-      
-      setStream(mediaStream);
+      streamRef.current = combinedStream;
+      setStream(combinedStream);
       setConnectionStatus('connected');
       reconnectAttemptsRef.current = 0;
       
-      applyVideoConstraints(mediaStream, videoQuality);
+      console.log('Media initialization complete:', 
+        `Audio: ${combinedStream.getAudioTracks().length} tracks, ` +
+        `Video: ${combinedStream.getVideoTracks().length} tracks`
+      );
     } catch (error) {
-      console.error('Error accessing media devices:', error);
+      console.error('Error in media initialization:', error);
       setConnectionStatus('disconnected');
       
       if (reconnectAttemptsRef.current === 1) {
         toast({
           variant: "destructive",
           title: "Media Access Error",
-          description: "Unable to access camera or microphone. Please check your permissions.",
+          description: "Unable to access media devices. Please check your permissions.",
         });
       }
       
@@ -226,18 +269,15 @@ export const useMediaStream = () => {
     initializeMedia();
 
     return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => {
-          track.stop();
-          console.log(`Cleanup: Stopped ${track.kind} track ${track.label}`);
-        });
-      }
-      if (screenStream) {
-        screenStream.getTracks().forEach(track => {
-          track.stop();
-          console.log(`Cleanup: Stopped screen share track ${track.label}`);
-        });
-      }
+      [streamRef.current, audioStreamRef.current, videoStreamRef.current, screenStream].forEach(stream => {
+        if (stream) {
+          stream.getTracks().forEach(track => {
+            track.stop();
+            console.log(`Cleanup: Stopped ${track.kind} track ${track.label}`);
+          });
+        }
+      });
+      
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current);
       }
@@ -291,57 +331,75 @@ export const useMediaStream = () => {
         const videoTracks = stream.getVideoTracks();
         
         if (!newState) {
-          // Completely stop video tracks when turning off camera
-          console.log('Stopping all video tracks to release camera hardware');
+          console.log('Turning off video - stopping all video tracks to release camera hardware');
+          
           videoTracks.forEach(track => {
             track.enabled = false;
-            // Actually stop the track to release camera hardware
             track.stop();
-            console.log(`Video track ${track.label} stopped and disabled`);
+            stream.removeTrack(track);
+            console.log(`Video track ${track.label} completely stopped and removed from stream`);
           });
           
-          // Notify user that camera is now completely off
+          if (videoStreamRef.current) {
+            videoStreamRef.current.getTracks().forEach(track => {
+              track.stop();
+            });
+            videoStreamRef.current = null;
+          }
+          
           toast({
-            title: "Camera Off",
-            description: "Your camera has been turned off and hardware access stopped.",
+            title: "Camera Hardware Released",
+            description: "Your camera has been completely turned off and hardware access released.",
           });
         } else {
-          // When turning video back on, check if we need to reinitialize
-          if (videoTracks.length === 0 || videoTracks.some(track => track.readyState === 'ended')) {
-            console.log('Video tracks ended or missing, reinitializing camera');
-            await initializeMedia(selectedAudioDevice, selectedVideoDevice);
-            toast({
-              title: "Camera On",
-              description: "Your camera has been turned on.",
-            });
-          } else {
-            // We still have active tracks, just enable them
-            videoTracks.forEach(track => {
-              track.enabled = true;
-              console.log(`Video track ${track.label} enabled`);
+          console.log('Turning on video - requesting camera access');
+          
+          try {
+            const videoConstraints = getVideoConstraints(videoQuality, selectedVideoDevice);
+            const newVideoStream = await navigator.mediaDevices.getUserMedia({ 
+              audio: false, 
+              video: videoConstraints 
             });
             
-            applyVideoConstraints(stream, videoQuality);
+            videoStreamRef.current = newVideoStream;
+            
+            newVideoStream.getVideoTracks().forEach(track => {
+              stream.addTrack(track);
+              console.log(`Added new video track: ${track.label}`);
+            });
+            
+            applyVideoConstraints(newVideoStream, videoQuality);
+            
+            setStream(new MediaStream([...stream.getTracks()]));
+            
+            toast({
+              title: "Camera Activated",
+              description: "Your camera has been turned on and is now active.",
+            });
+          } catch (error) {
+            console.error('Error activating camera:', error);
+            setIsVideoOn(false);
+            
+            toast({
+              variant: "destructive",
+              title: "Camera Error",
+              description: "Failed to access your camera. Please check permissions and try again.",
+            });
           }
         }
       } else if (newState) {
-        // No existing stream, initialize one when turning on
+        console.log('No existing stream but video requested - initializing media');
         await initializeMedia(selectedAudioDevice, selectedVideoDevice);
-        toast({
-          title: "Camera On",
-          description: "Your camera has been turned on.",
-        });
       }
     } catch (error) {
-      console.error('Error toggling video:', error);
+      console.error('Error in video toggle:', error);
+      setIsVideoOn(!newState);
+      
       toast({
         variant: "destructive",
-        title: "Camera Error",
-        description: "There was a problem controlling your camera. Please check permissions.",
+        title: "Video Toggle Error",
+        description: "An error occurred while changing camera state.",
       });
-      
-      // Revert UI state if operation failed
-      setIsVideoOn(!newState);
     }
   }, [isVideoOn, stream, initializeMedia, selectedAudioDevice, selectedVideoDevice, applyVideoConstraints, videoQuality, toast]);
 

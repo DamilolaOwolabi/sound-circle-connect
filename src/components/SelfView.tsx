@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, VideoOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import VideoDisplay from './VideoDisplay';
 import { cn } from '@/lib/utils';
@@ -61,8 +61,13 @@ const SelfView = ({ stream, isAudioOn, isVideoOn }: SelfViewProps) => {
           )}
           {!isVideoOn && visible && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center text-lg font-semibold">
-                Y
+              <div className="flex flex-col items-center gap-1">
+                <div className="w-12 h-12 rounded-full bg-secondary/20 flex items-center justify-center text-lg font-semibold">
+                  Y
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <VideoOff className="w-3 h-3" /> Camera off
+                </div>
               </div>
             </div>
           )}

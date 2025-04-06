@@ -128,52 +128,69 @@ const VideoDisplay = ({
     if (stream && videoRef.current) {
       console.log('Setting video stream:', stream.id, 'Video tracks:', stream.getVideoTracks().length);
       
+      // Check if the stream has video tracks before setting srcObject
       const videoTracks = stream.getVideoTracks();
-      if (videoTracks.length > 0) {
-        console.log('Video track enabled:', videoTracks[0].enabled, 'readyState:', videoTracks[0].readyState);
-      }
+      console.log('Video track enabled:', videoTracks.length > 0 ? 
+        `${videoTracks[0].enabled}, readyState: ${videoTracks[0].readyState}` : 
+        'No video tracks'
+      );
       
-      videoRef.current.srcObject = stream;
-      
-      videoRef.current.addEventListener('error', handleVideoError);
-      
-      const handlePlaying = () => {
-        console.log('Video started playing:', stream.id);
-        setIsVideoPlaying(true);
-      };
-      
-      videoRef.current.addEventListener('playing', handlePlaying);
-      
-      const handleTrackEnded = () => {
-        console.log('Video track ended, updating UI');
-        setIsVideoPlaying(false);
-      };
-      
-      videoTracks.forEach(track => {
-        track.addEventListener('ended', handleTrackEnded);
-      });
-      
-      if (isVideoOn || isScreenShare) {
-        const videoTracks = stream.getVideoTracks();
+      // Only set srcObject if the stream has media tracks
+      if (stream.getTracks().length > 0) {
+        videoRef.current.srcObject = stream;
         
-        if (videoTracks.length > 0) {
-          try {
-            adjustStreamQuality(adaptiveQuality);
-          } catch (e) {
-            console.warn('Error applying initial constraints:', e);
+        videoRef.current.addEventListener('error', handleVideoError);
+        
+        const handlePlaying = () => {
+          console.log('Video started playing:', stream.id);
+          setIsVideoPlaying(true);
+        };
+        
+        videoRef.current.addEventListener('playing', handlePlaying);
+        
+        const handleTrackEnded = () => {
+          console.log('Video track ended, updating UI');
+          setIsVideoPlaying(false);
+        };
+        
+        videoTracks.forEach(track => {
+          track.addEventListener('ended', handleTrackEnded);
+        });
+        
+        if (isVideoOn || isScreenShare) {
+          const videoTracks = stream.getVideoTracks();
+          
+          if (videoTracks.length > 0) {
+            try {
+              adjustStreamQuality(adaptiveQuality);
+            } catch (e) {
+              console.warn('Error applying initial constraints:', e);
+            }
           }
         }
-      }
-      
-      return () => {
-        if (videoRef.current) {
-          videoRef.current.removeEventListener('error', handleVideoError);
-          videoRef.current.removeEventListener('playing', handlePlaying);
+        
+        return () => {
+          if (videoRef.current) {
+            videoRef.current.removeEventListener('error', handleVideoError);
+            videoRef.current.removeEventListener('playing', handlePlaying);
+          }
+          videoTracks.forEach(track => {
+            track.removeEventListener('ended', handleTrackEnded);
+          });
+        };
+      } else {
+        console.log('Stream has no tracks, not setting srcObject');
+        // Clear the video source if there are no tracks
+        if (videoRef.current.srcObject) {
+          videoRef.current.srcObject = null;
+          setIsVideoPlaying(false);
         }
-        videoTracks.forEach(track => {
-          track.removeEventListener('ended', handleTrackEnded);
-        });
-      };
+      }
+    } else if (videoRef.current && videoRef.current.srcObject && !isVideoOn && !isScreenShare) {
+      // If video is turned off, clear the video source
+      console.log('Clearing video source because video is turned off');
+      videoRef.current.srcObject = null;
+      setIsVideoPlaying(false);
     }
   }, [stream, isVideoOn, isScreenShare, handleVideoError, adjustStreamQuality, adaptiveQuality]);
 
@@ -215,7 +232,7 @@ const VideoDisplay = ({
 
   useEffect(() => {
     const videoElement = videoRef.current;
-    if (!videoElement || !stream) return;
+    if (!videoElement || !stream || !isVideoOn) return;
     
     const playVideo = async () => {
       try {
@@ -243,15 +260,18 @@ const VideoDisplay = ({
     return () => {
       videoElement.removeEventListener('canplay', handleCanPlay);
     };
-  }, [stream]);
+  }, [stream, isVideoOn]);
 
-  if (!stream) {
+  // Check if video is actually available (stream exists, video is on, and stream has video tracks)
+  const hasVideoTracks = stream?.getVideoTracks().length > 0 && isVideoOn;
+
+  if (!stream || (!isScreenShare && !hasVideoTracks)) {
     return (
       <div className={cn(
         "w-full h-full flex items-center justify-center bg-secondary/10",
         className
       )}>
-        <p className="text-xs text-muted-foreground">No video</p>
+        <p className="text-xs text-muted-foreground">Camera off</p>
       </div>
     );
   }
@@ -264,7 +284,7 @@ const VideoDisplay = ({
         playsInline
         muted={!isAudioOn}
         className={cn(
-          !isVideoOn ? 'hidden' : '',
+          !hasVideoTracks ? 'hidden' : '',
           isScreenShare ? "object-contain" : "object-cover",
           "w-full h-full",
           className
@@ -275,7 +295,7 @@ const VideoDisplay = ({
         }}
         onError={handleVideoPlaybackError}
       />
-      {!isVideoOn && (
+      {!hasVideoTracks && (
         <div className={cn(
           "w-full h-full flex items-center justify-center bg-muted/20",
           className
