@@ -1,6 +1,7 @@
 
 import React from 'react';
 import ParticipantTile from './ParticipantTile';
+import { BackgroundOption } from './BackgroundSelector';
 
 interface Participant {
   id: string;
@@ -18,7 +19,7 @@ interface ParticipantsGridProps {
     radiusSize: number;
     stream: MediaStream | null;
     screenStream: MediaStream | null;
-    background?: { id: string; url?: string; type?: string } | null;
+    background?: BackgroundOption | null;
   };
   mockParticipants: Participant[];
 }

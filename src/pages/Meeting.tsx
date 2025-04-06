@@ -16,6 +16,7 @@ import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
 import { toast } from '@/components/ui/use-toast';
 import ResponsiveImage from '@/components/ResponsiveImage';
+import { BackgroundOption } from '@/components/BackgroundSelector';
 
 const MIN_RADIUS = 30;
 const MAX_RADIUS = Math.min(window.innerWidth, window.innerHeight) / 2;
@@ -26,10 +27,56 @@ const MOCK_PARTICIPANTS = [
   { id: '4', name: 'Alice Johnson', isAudioOn: true, isVideoOn: true, radiusSize: 60 },
 ];
 
-const BACKGROUND_OPTIONS = [
-  { id: 'default', url: 'https://images.unsplash.com/photo-1497366216548-37526070297c?fit=crop&w=1920&h=1080&q=80' },
-  { id: 'nature', url: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?fit=crop&w=1920&h=1080&q=80' },
-  { id: 'workspace', url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?fit=crop&w=1920&h=1080&q=80' },
+// Sound Radius primary colors
+const BACKGROUND_COLORS: BackgroundOption[] = [
+  { id: 'primary-purple', type: 'color', value: '#9b87f5' },
+  { id: 'secondary-purple', type: 'color', value: '#7E69AB' },
+  { id: 'tertiary-purple', type: 'color', value: '#6E59A5' },
+  { id: 'dark-purple', type: 'color', value: '#1A1F2C' },
+  { id: 'light-purple', type: 'color', value: '#D6BCFA' },
+  { id: 'dark-gray', type: 'color', value: '#2D3748' },
+  { id: 'gradient-1', type: 'color', value: 'linear-gradient(135deg, #9b87f5 0%, #D6BCFA 100%)' },
+  { id: 'gradient-2', type: 'color', value: 'linear-gradient(135deg, #6E59A5 0%, #9b87f5 100%)' },
+];
+
+// Background images
+const BACKGROUND_IMAGES: BackgroundOption[] = [
+  { 
+    id: 'mountains', 
+    type: 'image', 
+    value: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?fit=crop&w=1920&h=1080&q=80' 
+  },
+  { 
+    id: 'forest', 
+    type: 'image', 
+    value: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?fit=crop&w=1920&h=1080&q=80' 
+  },
+  { 
+    id: 'abstract', 
+    type: 'image', 
+    value: 'https://images.unsplash.com/photo-1614850523060-8da1d56ae167?fit=crop&w=1920&h=1080&q=80' 
+  },
+  { 
+    id: 'night-sky', 
+    type: 'image', 
+    value: 'https://images.unsplash.com/photo-1470813740244-df37b8c1edcb?fit=crop&w=1920&h=1080&q=80' 
+  },
+  { 
+    id: 'green-mountains', 
+    type: 'image', 
+    value: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?fit=crop&w=1920&h=1080&q=80' 
+  },
+  { 
+    id: 'office', 
+    type: 'image', 
+    value: 'https://images.unsplash.com/photo-1497366754035-f200968a6e72?fit=crop&w=1920&h=1080&q=80' 
+  },
+];
+
+// Combine all background options
+const ALL_BACKGROUND_OPTIONS: BackgroundOption[] = [
+  ...BACKGROUND_COLORS,
+  ...BACKGROUND_IMAGES
 ];
 
 const Meeting = () => {
@@ -37,7 +84,7 @@ const Meeting = () => {
   const [radiusSize, setRadiusSize] = useState(50);
   const [maxRadius, setMaxRadius] = useState(MAX_RADIUS);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [meetingBackground, setMeetingBackground] = useState(BACKGROUND_OPTIONS[0]);
+  const [meetingBackground, setMeetingBackground] = useState<BackgroundOption>(BACKGROUND_COLORS[0]);
   const location = useLocation();
   const navigate = useNavigate();
   const isHost = location.state?.isHost;
@@ -196,15 +243,31 @@ const Meeting = () => {
     }
   };
 
-  return (
-    <div 
-      className="min-h-screen bg-background p-6 meeting-room-container"
-      style={{
-        backgroundImage: `url(${meetingBackground.url})`,
+  const getBackgroundStyle = () => {
+    if (meetingBackground.type === 'color') {
+      return { background: meetingBackground.value };
+    } else {
+      return {
+        backgroundImage: `url(${meetingBackground.value})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
-      }}
+      };
+    }
+  };
+
+  const handleChangeMeetingBackground = (background: BackgroundOption) => {
+    setMeetingBackground(background);
+    toast({
+      title: "Background Changed",
+      description: `Meeting background updated to ${background.id}`,
+    });
+  };
+
+  return (
+    <div 
+      className="min-h-screen bg-background p-6 meeting-room-container"
+      style={getBackgroundStyle()}
     >
       <div className="meeting-content-container">
         <div className="flex justify-between items-center mb-4">
@@ -295,8 +358,8 @@ const Meeting = () => {
           onDeviceChange={handleDeviceChange}
           onQualityChange={handleQualityChange}
           onLeave={() => navigate('/')}
-          onChangeMeetingBackground={(bg) => setMeetingBackground(bg)}
-          meetingBackgrounds={BACKGROUND_OPTIONS}
+          onChangeMeetingBackground={handleChangeMeetingBackground}
+          meetingBackgrounds={ALL_BACKGROUND_OPTIONS}
           currentMeetingBackground={meetingBackground}
         />
       </div>

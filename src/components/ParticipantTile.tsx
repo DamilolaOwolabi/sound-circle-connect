@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import VideoDisplay from './VideoDisplay';
 import AudioStream from './AudioStream';
 import { useToast } from '@/hooks/use-toast';
+import { BackgroundOption } from './BackgroundSelector';
 
 interface ParticipantTileProps {
   name: string;
@@ -14,7 +15,7 @@ interface ParticipantTileProps {
   className?: string;
   stream?: MediaStream | null;
   isSelfView?: boolean;
-  background?: { id: string; url?: string; type?: string } | null;
+  background?: BackgroundOption | null;
 }
 
 const ParticipantTile = ({
