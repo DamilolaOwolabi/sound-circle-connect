@@ -102,7 +102,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
         isAudioOn={localUser.isAudioOn}
         isVideoOn={localUser.isVideoOn}
         radiusSize={localUser.radiusSize}
-        className={`${layout === 'grid' ? '' : 'w-full max-w-2xl'} ${layout !== 'grid' && isAnimating ? 'animate-pulse-once' : ''}`}
+        className={`${layout === 'grid' ? '' : 'w-full max-w-2xl'} ${layout === 'spotlight' && isAnimating ? 'animate-pulse-once' : ''}`}
         stream={activeStream}
         background={localUser.background}
         isSelfView={true}
