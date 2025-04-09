@@ -139,7 +139,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipa
             isVideoOn={participant.isVideoOn}
             radiusSize={participant.radiusSize}
             stream={participant.stream}
-            className={layout === 'grid' ? 'hidden' : 'radius-mode-participant'}
+            className={layout !== 'grid' ? 'radius-mode-participant' : 'hidden'}
             initialPosition={participant.position}
             isAnimating={isAnimating}
           />
