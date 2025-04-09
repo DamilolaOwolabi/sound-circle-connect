@@ -9,6 +9,7 @@ interface Participant {
   isAudioOn: boolean;
   isVideoOn: boolean;
   radiusSize: number;
+  stream?: MediaStream | null;
 }
 
 interface ParticipantsGridProps {
@@ -22,15 +23,19 @@ interface ParticipantsGridProps {
     background?: BackgroundOption | null;
   };
   mockParticipants: Participant[];
+  remoteParticipants?: Participant[];
 }
 
-const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsGridProps) => {
+const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipants = [] }: ParticipantsGridProps) => {
   // Determine which stream to use (screen share has priority)
   const activeStream = localUser.screenStream || localUser.stream;
   
   // Animation states
   const [isAnimating, setIsAnimating] = useState(true);
   const [participantsWithPositions, setParticipantsWithPositions] = useState<(Participant & { position?: { x: number, y: number } })[]>([]);
+  
+  // Combine mock and remote participants for display
+  const allParticipants = [...mockParticipants, ...remoteParticipants];
   
   // Log stream info for debugging
   React.useEffect(() => {
@@ -55,7 +60,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
     }
     
     // Add random positions for initial shuffle
-    const withRandomPositions = mockParticipants.map((p) => ({
+    const withRandomPositions = allParticipants.map((p) => ({
       ...p,
       position: {
         x: Math.random() * 200 - 100, // Random position between -100 and 100
@@ -68,21 +73,20 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
     // First phase: Shuffle animation
     const shuffleTimeout = setTimeout(() => {
       // Second phase: Sort into positions around the host
-      const sortedPositions = mockParticipants.map((p, index) => {
+      const sortedPositions = allParticipants.map((p, index) => {
         // Calculate positions in a circular pattern
-        const angleStep = (2 * Math.PI) / mockParticipants.length;
+        const angleStep = (2 * Math.PI) / allParticipants.length;
         const angle = angleStep * index;
         
         // Calculate radius based on user's radius size to maintain proper spacing
-        // This ensures participants are at least half the user's radius diameter away
-        const minDistance = localUser.radiusSize * 1.5;
-        const spacing = minDistance + p.radiusSize;
+        // Ensure participants are at least half the user's radius diameter away plus their own radius
+        const minDistance = localUser.radiusSize * 1.5 + p.radiusSize;
         
         return {
           ...p,
           position: {
-            x: Math.cos(angle) * spacing,
-            y: Math.sin(angle) * spacing
+            x: Math.cos(angle) * minDistance,
+            y: Math.sin(angle) * minDistance
           }
         };
       });
@@ -96,7 +100,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
     return () => {
       clearTimeout(shuffleTimeout);
     };
-  }, [layout, mockParticipants, localUser.radiusSize]);
+  }, [layout, allParticipants, localUser.radiusSize]);
 
   return (
     <div className={`flex-1 relative min-h-[600px] ${layout === 'grid' ? 'grid grid-cols-3 gap-4' : 'flex justify-center'} rounded-xl overflow-hidden`}>
@@ -114,13 +118,14 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
       
       {layout === 'grid' ? (
         // Regular grid layout
-        mockParticipants.map((participant) => (
+        allParticipants.map((participant) => (
           <ParticipantTile
             key={participant.id}
             name={participant.name}
             isAudioOn={participant.isAudioOn}
             isVideoOn={participant.isVideoOn}
             radiusSize={participant.radiusSize}
+            stream={participant.stream}
             className={layout === 'grid' ? '' : 'hidden'}
           />
         ))
@@ -133,6 +138,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
             isAudioOn={participant.isAudioOn}
             isVideoOn={participant.isVideoOn}
             radiusSize={participant.radiusSize}
+            stream={participant.stream}
             className={layout === 'grid' ? 'hidden' : 'radius-mode-participant'}
             initialPosition={participant.position}
             isAnimating={isAnimating}

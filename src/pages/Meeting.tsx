@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Controls from '@/components/Controls';
@@ -14,6 +13,7 @@ import BreakoutRooms from '@/components/meeting/BreakoutRooms';
 import SelfView from '@/components/SelfView';
 import { useMediaStream } from '@/hooks/useMediaStream';
 import { useRecording } from '@/hooks/useRecording';
+import { useWebRTC } from '@/hooks/useWebRTC';
 import { toast } from '@/components/ui/use-toast';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import { BackgroundOption } from '@/components/BackgroundSelector';
@@ -27,7 +27,6 @@ const MOCK_PARTICIPANTS = [
   { id: '4', name: 'Alice Johnson', isAudioOn: true, isVideoOn: true, radiusSize: 60 },
 ];
 
-// Sound Radius primary colors
 const BACKGROUND_COLORS: BackgroundOption[] = [
   { id: 'primary-purple', type: 'color', value: '#9b87f5' },
   { id: 'secondary-purple', type: 'color', value: '#7E69AB' },
@@ -39,7 +38,6 @@ const BACKGROUND_COLORS: BackgroundOption[] = [
   { id: 'gradient-2', type: 'color', value: 'linear-gradient(135deg, #6E59A5 0%, #9b87f5 100%)' },
 ];
 
-// Background images
 const BACKGROUND_IMAGES: BackgroundOption[] = [
   { 
     id: 'mountains', 
@@ -73,7 +71,6 @@ const BACKGROUND_IMAGES: BackgroundOption[] = [
   },
 ];
 
-// Combine all background options
 const ALL_BACKGROUND_OPTIONS: BackgroundOption[] = [
   ...BACKGROUND_COLORS,
   ...BACKGROUND_IMAGES
@@ -119,8 +116,35 @@ const Meeting = () => {
     handleDeviceChange,
     handleQualityChange,
   } = useMediaStream();
-
+  
   const { isRecording, toggleRecording } = useRecording(stream);
+  
+  const {
+    isConnected,
+    isConnecting,
+    remoteParticipants,
+    connect: connectToMeeting,
+    disconnect: disconnectFromMeeting
+  } = useWebRTC({
+    meetingId,
+    userName: "You",
+    stream
+  });
+
+  useEffect(() => {
+    if (stream && !isConnected && !isConnecting) {
+      connectToMeeting();
+    }
+  }, [stream, isConnected, isConnecting, connectToMeeting]);
+  
+  const remoteParticipantsData = remoteParticipants.map(p => ({
+    id: p.id,
+    name: p.name,
+    isAudioOn: p.isAudioOn,
+    isVideoOn: p.isVideoOn,
+    radiusSize: p.radiusSize,
+    stream: p.stream
+  }));
 
   const handleTranscriptionUpdate = (text: string) => {
     setAiTranscript(prev => [...prev, text]);
@@ -263,6 +287,11 @@ const Meeting = () => {
       description: `Meeting background updated to ${background.id}`,
     });
   };
+  
+  const handleLeave = () => {
+    disconnectFromMeeting();
+    navigate('/');
+  };
 
   return (
     <div 
@@ -279,6 +308,8 @@ const Meeting = () => {
               priority={true}
             />
             <h1 className="text-2xl font-bold text-primary">{meetingName}</h1>
+            {isConnecting && <span className="text-muted-foreground animate-pulse">Connecting...</span>}
+            {isConnected && <span className="text-green-500">Connected</span>}
           </div>
           {isHost && (
             <MeetingInvite meetingId={meetingId} isHost={isHost} />
@@ -294,14 +325,21 @@ const Meeting = () => {
                 isVideoOn,
                 radiusSize,
                 stream,
-                screenStream
+                screenStream,
+                background: meetingBackground
               }}
               mockParticipants={participants}
+              remoteParticipants={remoteParticipantsData}
             />
           </div>
           
           <div className="w-96 space-y-4">
-            <ParticipantsList participants={participants} />
+            <ParticipantsList 
+              participants={[
+                ...participants, 
+                ...remoteParticipantsData
+              ]} 
+            />
             <RadiusControl
               radiusSize={radiusSize}
               onRadiusChange={handleRadiusChange}
@@ -320,14 +358,14 @@ const Meeting = () => {
             {isHost && (
               <>
                 <HostControlPanel
-                  participants={participants}
+                  participants={[...participants, ...remoteParticipantsData]}
                   onMuteAll={handleMuteAll}
                   onDisableAllVideos={handleDisableAllVideos}
                   onRemoveParticipant={handleRemoveParticipant}
                   onInviteParticipant={handleInviteParticipant}
                 />
                 <BreakoutRooms
-                  participants={participants}
+                  participants={[...participants, ...remoteParticipantsData]}
                   onCreateRoom={handleCreateBreakoutRoom}
                   onDeleteRoom={handleDeleteBreakoutRoom}
                   onAssignParticipant={handleAssignParticipant}
@@ -357,7 +395,7 @@ const Meeting = () => {
           onToggleLayout={toggleLayout}
           onDeviceChange={handleDeviceChange}
           onQualityChange={handleQualityChange}
-          onLeave={() => navigate('/')}
+          onLeave={handleLeave}
           onChangeMeetingBackground={handleChangeMeetingBackground}
           meetingBackgrounds={ALL_BACKGROUND_OPTIONS}
           currentMeetingBackground={meetingBackground}
