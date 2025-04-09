@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ParticipantTile from './ParticipantTile';
 import { BackgroundOption } from './BackgroundSelector';
