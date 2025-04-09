@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Video, VideoOff, Monitor, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -16,6 +15,8 @@ interface ParticipantTileProps {
   stream?: MediaStream | null;
   isSelfView?: boolean;
   background?: BackgroundOption | null;
+  initialPosition?: { x: number, y: number };
+  isAnimating?: boolean;
 }
 
 const ParticipantTile = ({
@@ -26,15 +27,23 @@ const ParticipantTile = ({
   className,
   stream,
   isSelfView = false,
-  background
+  background,
+  initialPosition,
+  isAnimating = false
 }: ParticipantTileProps) => {
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState(initialPosition || { x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [isInRange, setIsInRange] = useState(false);
   const [hasVideoError, setHasVideoError] = useState(false);
   const tileRef = useRef<HTMLDivElement>(null);
   const dragStartPos = useRef({ x: 0, y: 0 });
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (initialPosition && isAnimating) {
+      setPosition(initialPosition);
+    }
+  }, [initialPosition, isAnimating]);
 
   useEffect(() => {
     if (stream) {
@@ -141,6 +150,8 @@ const ParticipantTile = ({
         "participant-tile relative cursor-move p-1",
         isDragging && "opacity-75",
         isSelfView && "self-view",
+        isAnimating && !isSelfView && "animate-float-in",
+        isSelfView && isAnimating && "animate-pulse-once",
         className
       )}
       draggable={!isSelfView}
@@ -152,14 +163,16 @@ const ParticipantTile = ({
         left: isSelfView ? 'auto' : `${position.x}px`,
         top: isSelfView ? 'auto' : `${position.y}px`,
         transform: `translate(${isDragging ? '-4px, -4px' : '0, 0'})`,
-        transition: isDragging ? 'none' : 'transform 0.2s ease-out',
-        zIndex: isDragging ? 10 : 1,
+        transition: isAnimating ? 'all 1s cubic-bezier(0.34, 1.56, 0.64, 1)' : 
+                   isDragging ? 'none' : 'transform 0.2s ease-out, left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        zIndex: isDragging ? 10 : isSelfView ? 5 : 1,
       }}
     >
       <div 
         className={cn(
           "overflow-hidden bg-muted relative",
-          isScreenShare ? "w-full h-full rounded-lg" : "rounded-full"
+          isScreenShare ? "w-full h-full rounded-lg" : "rounded-full",
+          isSelfView && isAnimating && "animate-subtle-pulse"
         )}
         style={{
           width: isScreenShare ? '100%' : `${radiusSize * 2}px`,
@@ -207,9 +220,25 @@ const ParticipantTile = ({
         
         {!isScreenShare && !isSelfView && (
           <div 
-            className="absolute inset-0 pointer-events-none participant-radius"
+            className={cn(
+              "absolute inset-0 pointer-events-none participant-radius",
+              isAnimating && "animate-glow-pulse"
+            )}
             style={{
               background: `radial-gradient(circle at center, transparent ${radiusSize * 0.5}px, ${isInRange ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)'} ${radiusSize}px)`,
+              transition: 'all 0.3s ease-in-out'
+            }}
+          />
+        )}
+
+        {!isScreenShare && isSelfView && (
+          <div 
+            className={cn(
+              "absolute inset-0 pointer-events-none host-radius",
+              isAnimating && "animate-glow-pulse"
+            )}
+            style={{
+              background: `radial-gradient(circle at center, transparent ${radiusSize * 0.5}px, rgba(155, 135, 245, 0.2) ${radiusSize}px)`,
               transition: 'all 0.3s ease-in-out'
             }}
           />
