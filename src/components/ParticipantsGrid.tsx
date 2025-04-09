@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import ParticipantTile from './ParticipantTile';
 import { BackgroundOption } from './BackgroundSelector';
@@ -110,7 +109,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipa
         isAudioOn={localUser.isAudioOn}
         isVideoOn={localUser.isVideoOn}
         radiusSize={localUser.radiusSize}
-        className={`${layout === 'grid' ? '' : 'w-full max-w-2xl'} ${layout === 'spotlight' && isAnimating ? 'animate-pulse-once' : ''}`}
+        className={`${layout === 'grid' ? '' : ''} ${layout === 'spotlight' && isAnimating ? 'animate-pulse-once' : ''}`}
         stream={activeStream}
         background={localUser.background}
         isSelfView={true}
@@ -126,7 +125,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipa
             isVideoOn={participant.isVideoOn}
             radiusSize={participant.radiusSize}
             stream={participant.stream}
-            className={layout === 'grid' ? '' : 'hidden'}
+            className={''}
           />
         ))
       ) : (
@@ -139,7 +138,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipa
             isVideoOn={participant.isVideoOn}
             radiusSize={participant.radiusSize}
             stream={participant.stream}
-            className={layout !== 'grid' ? 'radius-mode-participant' : 'hidden'}
+            className={'radius-mode-participant'}
             initialPosition={participant.position}
             isAnimating={isAnimating}
           />
