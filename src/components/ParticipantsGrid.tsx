@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import ParticipantTile from './ParticipantTile';
 import { BackgroundOption } from './BackgroundSelector';
@@ -71,13 +72,17 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
         // Calculate positions in a circular pattern
         const angleStep = (2 * Math.PI) / mockParticipants.length;
         const angle = angleStep * index;
-        const radius = 150; // Distance from center
+        
+        // Calculate radius based on user's radius size to maintain proper spacing
+        // This ensures participants are at least half the user's radius diameter away
+        const minDistance = localUser.radiusSize * 1.5;
+        const spacing = minDistance + p.radiusSize;
         
         return {
           ...p,
           position: {
-            x: Math.cos(angle) * radius,
-            y: Math.sin(angle) * radius
+            x: Math.cos(angle) * spacing,
+            y: Math.sin(angle) * spacing
           }
         };
       });
@@ -91,7 +96,7 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants }: ParticipantsG
     return () => {
       clearTimeout(shuffleTimeout);
     };
-  }, [layout, mockParticipants]);
+  }, [layout, mockParticipants, localUser.radiusSize]);
 
   return (
     <div className={`flex-1 relative min-h-[600px] ${layout === 'grid' ? 'grid grid-cols-3 gap-4' : 'flex justify-center'} rounded-xl overflow-hidden`}>
