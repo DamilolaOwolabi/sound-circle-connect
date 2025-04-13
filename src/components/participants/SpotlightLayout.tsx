@@ -10,7 +10,7 @@ interface SpotlightLayoutProps {
 
 const SpotlightLayout = ({ participantsWithPositions, isAnimating }: SpotlightLayoutProps) => {
   return (
-    <>
+    <div className="relative flex items-center justify-center w-full h-full">
       {participantsWithPositions.map((participant) => (
         <ParticipantTile
           key={participant.id}
@@ -19,12 +19,12 @@ const SpotlightLayout = ({ participantsWithPositions, isAnimating }: SpotlightLa
           isVideoOn={participant.isVideoOn}
           radiusSize={participant.radiusSize}
           stream={participant.stream}
-          className={'radius-mode-participant'}
+          className="radius-mode-participant"
           initialPosition={participant.position}
           isAnimating={isAnimating}
         />
       ))}
-    </>
+    </div>
   );
 };
 

@@ -28,24 +28,27 @@ const useParticipantAnimations = ({
     const withRandomPositions = allParticipants.map((p) => ({
       ...p,
       position: {
-        x: Math.random() * 200 - 100, // Random position between -100 and 100
-        y: Math.random() * 200 - 100
+        // Create more dramatic randomness by increasing the range
+        x: Math.random() * 300 - 150, // Random position between -150 and 150
+        y: Math.random() * 300 - 150  // Random position between -150 and 150
       }
     }));
     
     setParticipantsWithPositions(withRandomPositions);
+    setIsAnimating(true);
     
-    // First phase: Shuffle animation
+    // First phase: Shuffle animation (wait 800ms to show the random positions)
     const shuffleTimeout = setTimeout(() => {
-      // Second phase: Sort into positions around the host
+      // Second phase: Sort into positions around the host using polar coordinates
       const sortedPositions = allParticipants.map((p, index) => {
-        // Calculate positions in a circular pattern
+        // Calculate positions in a circular pattern using polar coordinates
         const angleStep = (2 * Math.PI) / allParticipants.length;
         const angle = angleStep * index;
         
         // Calculate radius based on user's radius size to maintain proper spacing
-        // Ensure participants are at least half the user's radius diameter away plus their own radius
-        const minDistance = localUserRadiusSize * 1.5 + p.radiusSize;
+        // Ensure participants are at least double the user's radius away plus their own radius
+        // This creates better spacing and prevents overlaps
+        const minDistance = localUserRadiusSize * 2 + p.radiusSize;
         
         return {
           ...p,
@@ -58,9 +61,9 @@ const useParticipantAnimations = ({
       
       setParticipantsWithPositions(sortedPositions);
       
-      // End animation after sorting completes
+      // End animation after sorting completes with a smooth transition
       setTimeout(() => setIsAnimating(false), 1000);
-    }, 1500);
+    }, 800);
     
     return () => {
       clearTimeout(shuffleTimeout);

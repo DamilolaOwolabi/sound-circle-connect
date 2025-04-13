@@ -28,11 +28,12 @@ const LocalUserTile = ({
       name="You"
       isAudioOn={isAudioOn}
       isVideoOn={isVideoOn}
-      radiusSize={radiusSize}
-      className={`${layout === 'grid' ? '' : ''} ${layout === 'spotlight' && isAnimating ? 'animate-pulse-once' : ''}`}
+      radiusSize={layout === 'spotlight' ? radiusSize * 1.2 : radiusSize} // Make it 20% larger in spotlight mode
+      className={`${layout === 'grid' ? '' : 'local-user-spotlight'}`}
       stream={stream}
       background={background}
       isSelfView={true}
+      isAnimating={isAnimating}
     />
   );
 };
