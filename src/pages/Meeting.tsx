@@ -17,6 +17,8 @@ import { useWebRTC } from '@/hooks/useWebRTC';
 import { toast } from '@/components/ui/use-toast';
 import ResponsiveImage from '@/components/ResponsiveImage';
 import { BackgroundOption } from '@/components/BackgroundSelector';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const MIN_RADIUS = 30;
 const MAX_RADIUS = Math.min(window.innerWidth, window.innerHeight) / 2;
@@ -82,6 +84,9 @@ const Meeting = () => {
   const [maxRadius, setMaxRadius] = useState(MAX_RADIUS);
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [meetingBackground, setMeetingBackground] = useState<BackgroundOption>(BACKGROUND_COLORS[0]);
+  const [isPanelsVisible, setIsPanelsVisible] = useState(false);
+  const [activeTab, setActiveTab] = useState('participants');
+  
   const location = useLocation();
   const navigate = useNavigate();
   const isHost = location.state?.isHost;
@@ -171,6 +176,10 @@ const Meeting = () => {
   const toggleLayout = () => {
     setLayout(prev => prev === 'grid' ? 'spotlight' : 'grid');
     console.log('Layout changed to:', layout === 'grid' ? 'spotlight' : 'grid');
+  };
+
+  const togglePanels = () => {
+    setIsPanelsVisible(prev => !prev);
   };
 
   const handleShareInvite = async () => {
@@ -333,46 +342,75 @@ const Meeting = () => {
             />
           </div>
           
-          <div className="w-96 space-y-4">
-            <ParticipantsList 
-              participants={[
-                ...participants, 
-                ...remoteParticipantsData
-              ]} 
-            />
-            <RadiusControl
-              radiusSize={radiusSize}
-              onRadiusChange={handleRadiusChange}
-              minRadius={MIN_RADIUS}
-              maxRadius={maxRadius}
-            />
-            <AIFeatures stream={stream} />
-            <AITranscriptionPanel
-              stream={stream}
-              onTranscriptionUpdate={handleTranscriptionUpdate}
-            />
-            <AIMeetingAssistant
-              transcript={aiTranscript}
-              onResponse={handleAIResponse}
-            />
-            {isHost && (
-              <>
-                <HostControlPanel
-                  participants={[...participants, ...remoteParticipantsData]}
-                  onMuteAll={handleMuteAll}
-                  onDisableAllVideos={handleDisableAllVideos}
-                  onRemoveParticipant={handleRemoveParticipant}
-                  onInviteParticipant={handleInviteParticipant}
-                />
-                <BreakoutRooms
-                  participants={[...participants, ...remoteParticipantsData]}
-                  onCreateRoom={handleCreateBreakoutRoom}
-                  onDeleteRoom={handleDeleteBreakoutRoom}
-                  onAssignParticipant={handleAssignParticipant}
-                />
-              </>
-            )}
-          </div>
+          <Sheet open={isPanelsVisible} onOpenChange={setIsPanelsVisible}>
+            <SheetContent className="w-[350px] sm:w-[400px] p-0" forceMount>
+              <div className="h-full py-2">
+                <Tabs 
+                  defaultValue="participants" 
+                  value={activeTab}
+                  onValueChange={setActiveTab} 
+                  className="h-full flex flex-col"
+                >
+                  <TabsList className="grid grid-cols-4 mx-4">
+                    <TabsTrigger value="participants">People</TabsTrigger>
+                    <TabsTrigger value="radius">Radius</TabsTrigger>
+                    <TabsTrigger value="ai">AI</TabsTrigger>
+                    {isHost && <TabsTrigger value="host">Host</TabsTrigger>}
+                  </TabsList>
+                  
+                  <div className="p-4 flex-1 overflow-auto">
+                    <TabsContent value="participants" className="mt-0 h-full">
+                      <ParticipantsList 
+                        participants={[
+                          ...participants, 
+                          ...remoteParticipantsData
+                        ]} 
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="radius" className="mt-0 h-full">
+                      <RadiusControl
+                        radiusSize={radiusSize}
+                        onRadiusChange={handleRadiusChange}
+                        minRadius={MIN_RADIUS}
+                        maxRadius={maxRadius}
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="ai" className="mt-0 h-full space-y-4">
+                      <AIFeatures stream={stream} />
+                      <AITranscriptionPanel
+                        stream={stream}
+                        onTranscriptionUpdate={handleTranscriptionUpdate}
+                      />
+                      <AIMeetingAssistant
+                        transcript={aiTranscript}
+                        onResponse={handleAIResponse}
+                      />
+                    </TabsContent>
+
+                    {isHost && (
+                      <TabsContent value="host" className="mt-0 h-full space-y-4">
+                        <HostControlPanel
+                          participants={[...participants, ...remoteParticipantsData]}
+                          onMuteAll={handleMuteAll}
+                          onDisableAllVideos={handleDisableAllVideos}
+                          onRemoveParticipant={handleRemoveParticipant}
+                          onInviteParticipant={handleInviteParticipant}
+                        />
+                        <BreakoutRooms
+                          participants={[...participants, ...remoteParticipantsData]}
+                          onCreateRoom={handleCreateBreakoutRoom}
+                          onDeleteRoom={handleDeleteBreakoutRoom}
+                          onAssignParticipant={handleAssignParticipant}
+                        />
+                      </TabsContent>
+                    )}
+                  </div>
+                </Tabs>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
 
         <SelfView 
@@ -399,6 +437,8 @@ const Meeting = () => {
           onChangeMeetingBackground={handleChangeMeetingBackground}
           meetingBackgrounds={ALL_BACKGROUND_OPTIONS}
           currentMeetingBackground={meetingBackground}
+          onTogglePanels={togglePanels}
+          isPanelsVisible={isPanelsVisible}
         />
       </div>
     </div>

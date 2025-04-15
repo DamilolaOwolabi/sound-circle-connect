@@ -13,7 +13,8 @@ import {
   Circle,
   Square,
   MessageCircle,
-  Settings
+  Settings,
+  PanelRight
 } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import VideoSettings from './VideoSettings';
@@ -39,6 +40,8 @@ interface ControlsProps {
   onChangeMeetingBackground?: (background: BackgroundOption) => void;
   meetingBackgrounds?: BackgroundOption[];
   currentMeetingBackground?: BackgroundOption;
+  onTogglePanels: () => void;
+  isPanelsVisible: boolean;
 }
 
 const Controls = ({
@@ -58,7 +61,9 @@ const Controls = ({
   onLeave,
   onChangeMeetingBackground,
   meetingBackgrounds = [],
-  currentMeetingBackground
+  currentMeetingBackground,
+  onTogglePanels,
+  isPanelsVisible
 }: ControlsProps) => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [showQualitySettings, setShowQualitySettings] = useState(false);
@@ -163,6 +168,19 @@ const Controls = ({
           className="bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
         >
           <MessageCircle className="w-4 h-4" />
+        </Button>
+
+        <Button
+          variant={isPanelsVisible ? "secondary" : "outline"}
+          size="icon"
+          onClick={onTogglePanels}
+          className={isPanelsVisible 
+            ? "bg-white/40 text-[#472cb1] border-[#d6bcfa]" 
+            : "bg-white/20 hover:bg-white/30 text-white border-[#d6bcfa]/30"
+          }
+          title={isPanelsVisible ? "Hide side panels" : "Show side panels"}
+        >
+          <PanelRight className="w-4 h-4" />
         </Button>
 
         <Button 
