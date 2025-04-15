@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
@@ -58,6 +57,7 @@ const ParticipantTile = ({
     }
   }, [stream]);
 
+  // Update position when initialPosition changes
   useEffect(() => {
     if (initialPosition && (initialPosition.x !== position.x || initialPosition.y !== position.y)) {
       setPosition(initialPosition);
@@ -165,18 +165,20 @@ const ParticipantTile = ({
     transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'left 0.3s ease, top 0.3s ease',
     width: `${radiusSize * 2}px`,
     height: `${radiusSize * 2}px`,
-    minWidth: '120px',
-    minHeight: '120px',
+    minWidth: '60px',
+    minHeight: '60px',
     maxWidth: '400px',
     maxHeight: '400px',
+    borderRadius: '50%', // Ensure it's a perfect circle
     ...getBackgroundStyle()
   } : {
     width: `${radiusSize * 2}px`,
     height: `${radiusSize * 2}px`,
-    minWidth: '120px',
-    minHeight: '120px',
+    minWidth: '60px',
+    minHeight: '60px',
     maxWidth: '400px',
     maxHeight: '400px',
+    borderRadius: '50%', // Ensure it's a perfect circle
     ...getBackgroundStyle()
   };
 
@@ -184,7 +186,7 @@ const ParticipantTile = ({
     <div
       ref={tileRef}
       className={cn(
-        "relative rounded-lg overflow-hidden shadow-lg border border-border",
+        "relative overflow-hidden shadow-lg border border-border",
         isMovable ? "cursor-move" : "",
         className
       )}
