@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
@@ -155,13 +156,29 @@ const ParticipantTile = ({
     }
   };
 
-  const tileStyle = initialPosition ? {
+  // Fix: Create a properly typed style object for the tile
+  const tileStyle: React.CSSProperties = initialPosition ? {
     position: 'absolute',
     left: `${position.x}%`,
     top: `${position.y}%`,
     transform: 'translate(-50%, -50%)',
-    transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'left 0.3s ease, top 0.3s ease'
-  } : {};
+    transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'left 0.3s ease, top 0.3s ease',
+    width: `${radiusSize * 2}px`,
+    height: `${radiusSize * 2}px`,
+    minWidth: '120px',
+    minHeight: '120px',
+    maxWidth: '400px',
+    maxHeight: '400px',
+    ...getBackgroundStyle()
+  } : {
+    width: `${radiusSize * 2}px`,
+    height: `${radiusSize * 2}px`,
+    minWidth: '120px',
+    minHeight: '120px',
+    maxWidth: '400px',
+    maxHeight: '400px',
+    ...getBackgroundStyle()
+  };
 
   return (
     <div
@@ -171,16 +188,7 @@ const ParticipantTile = ({
         isMovable ? "cursor-move" : "",
         className
       )}
-      style={{
-        width: `${radiusSize * 2}px`,
-        height: `${radiusSize * 2}px`,
-        minWidth: '120px',
-        minHeight: '120px',
-        maxWidth: '400px',
-        maxHeight: '400px',
-        ...tileStyle,
-        ...getBackgroundStyle()
-      }}
+      style={tileStyle}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
     >
