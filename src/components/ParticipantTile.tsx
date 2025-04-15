@@ -38,6 +38,7 @@ const ParticipantTile = ({
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState(initialPosition || { x: 50, y: 50 });
   const tileRef = useRef<HTMLDivElement>(null);
+  const dragOffset = useRef({ x: 0, y: 0 });
 
   // Connect stream to video element when stream changes
   useEffect(() => {
@@ -65,9 +66,18 @@ const ParticipantTile = ({
   }, [initialPosition]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isMovable) return;
+    if (!isMovable || !tileRef.current) return;
     
     e.preventDefault();
+    
+    const tileRect = tileRef.current.getBoundingClientRect();
+    
+    // Calculate offset from the center of the tile
+    dragOffset.current = {
+      x: e.clientX - (tileRect.left + tileRect.width / 2),
+      y: e.clientY - (tileRect.top + tileRect.height / 2)
+    };
+    
     setIsDragging(true);
     
     const handleMouseMove = (e: MouseEvent) => {
@@ -78,11 +88,11 @@ const ParticipantTile = ({
       
       const containerRect = container.getBoundingClientRect();
       
-      // Calculate position as percentage of container
-      const newX = ((e.clientX - containerRect.left) / containerRect.width) * 100;
-      const newY = ((e.clientY - containerRect.top) / containerRect.height) * 100;
+      // Calculate position as percentage of container, accounting for the drag offset
+      const newX = ((e.clientX - dragOffset.current.x - containerRect.left) / containerRect.width) * 100;
+      const newY = ((e.clientY - dragOffset.current.y - containerRect.top) / containerRect.height) * 100;
       
-      // Keep within bounds
+      // Keep within bounds (0-100%)
       const boundedX = Math.max(0, Math.min(100, newX));
       const boundedY = Math.max(0, Math.min(100, newY));
       
@@ -104,7 +114,16 @@ const ParticipantTile = ({
   };
   
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (!isMovable) return;
+    if (!isMovable || !tileRef.current) return;
+    
+    const touch = e.touches[0];
+    const tileRect = tileRef.current.getBoundingClientRect();
+    
+    // Calculate offset from the center of the tile
+    dragOffset.current = {
+      x: touch.clientX - (tileRect.left + tileRect.width / 2),
+      y: touch.clientY - (tileRect.top + tileRect.height / 2)
+    };
     
     setIsDragging(true);
     
@@ -117,9 +136,9 @@ const ParticipantTile = ({
       
       const containerRect = container.getBoundingClientRect();
       
-      // Calculate position as percentage of container
-      const newX = ((touch.clientX - containerRect.left) / containerRect.width) * 100;
-      const newY = ((touch.clientY - containerRect.top) / containerRect.height) * 100;
+      // Calculate position as percentage of container, accounting for the drag offset
+      const newX = ((touch.clientX - dragOffset.current.x - containerRect.left) / containerRect.width) * 100;
+      const newY = ((touch.clientY - dragOffset.current.y - containerRect.top) / containerRect.height) * 100;
       
       // Keep within bounds
       const boundedX = Math.max(0, Math.min(100, newX));
@@ -156,13 +175,14 @@ const ParticipantTile = ({
     }
   };
 
-  // Fix: Create a properly typed style object for the tile
-  const tileStyle: React.CSSProperties = initialPosition ? {
-    position: 'absolute',
-    left: `${position.x}%`,
-    top: `${position.y}%`,
-    transform: 'translate(-50%, -50%)',
-    transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'left 0.3s ease, top 0.3s ease',
+  const tileStyle: React.CSSProperties = {
+    ...(initialPosition ? {
+      position: 'absolute',
+      left: `${position.x}%`,
+      top: `${position.y}%`,
+      transform: 'translate(-50%, -50%)',
+      transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'left 0.3s ease, top 0.3s ease',
+    } : {}),
     width: `${radiusSize * 2}px`,
     height: `${radiusSize * 2}px`,
     minWidth: '60px',
@@ -170,15 +190,8 @@ const ParticipantTile = ({
     maxWidth: '400px',
     maxHeight: '400px',
     borderRadius: '50%', // Ensure it's a perfect circle
-    ...getBackgroundStyle()
-  } : {
-    width: `${radiusSize * 2}px`,
-    height: `${radiusSize * 2}px`,
-    minWidth: '60px',
-    minHeight: '60px',
-    maxWidth: '400px',
-    maxHeight: '400px',
-    borderRadius: '50%', // Ensure it's a perfect circle
+    aspectRatio: '1 / 1', // Force perfect aspect ratio
+    boxShadow: isMovable && isDragging ? '0 0 15px rgba(155, 135, 245, 0.8)' : '0 4px 8px rgba(0, 0, 0, 0.1)',
     ...getBackgroundStyle()
   };
 
@@ -188,11 +201,14 @@ const ParticipantTile = ({
       className={cn(
         "relative overflow-hidden shadow-lg border border-border",
         isMovable ? "cursor-move" : "",
+        isDragging ? "z-10" : "",
         className
       )}
       style={tileStyle}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
+      aria-label={`${isMovable ? 'Movable ' : ''}participant ${name}`}
+      role={isMovable ? "button" : undefined}
     >
       {isVideoOn && stream ? (
         <video
