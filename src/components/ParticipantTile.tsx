@@ -1,249 +1,239 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Mic, MicOff, Video, VideoOff, Monitor, AlertTriangle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import VideoDisplay from './VideoDisplay';
-import AudioStream from './AudioStream';
-import { useToast } from '@/hooks/use-toast';
+import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
 import { BackgroundOption } from './BackgroundSelector';
 
 interface ParticipantTileProps {
+  id?: string;
   name: string;
   isAudioOn: boolean;
-  isVideoOn: boolean;
+  isVideoOn?: boolean;
   radiusSize: number;
-  className?: string;
   stream?: MediaStream | null;
-  isSelfView?: boolean;
+  className?: string;
   background?: BackgroundOption | null;
+  isSelfView?: boolean;
   initialPosition?: { x: number, y: number };
   isAnimating?: boolean;
+  isMovable?: boolean;
+  onPositionChange?: (position: { x: number, y: number }) => void;
 }
 
 const ParticipantTile = ({
+  id = crypto.randomUUID(),
   name,
   isAudioOn,
-  isVideoOn,
+  isVideoOn = false,
   radiusSize,
-  className,
   stream,
-  isSelfView = false,
+  className,
   background,
+  isSelfView = false,
   initialPosition,
-  isAnimating = false
+  isAnimating = false,
+  isMovable = false,
+  onPositionChange
 }: ParticipantTileProps) => {
-  const [position, setPosition] = useState(initialPosition || { x: 0, y: 0 });
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [isInRange, setIsInRange] = useState(false);
-  const [hasVideoError, setHasVideoError] = useState(false);
+  const [position, setPosition] = useState(initialPosition || { x: 50, y: 50 });
   const tileRef = useRef<HTMLDivElement>(null);
-  const dragStartPos = useRef({ x: 0, y: 0 });
-  const { toast } = useToast();
+
+  // Connect stream to video element when stream changes
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      
+      // Attempt to play the video
+      const playVideo = async () => {
+        try {
+          await videoRef.current?.play();
+        } catch (err) {
+          console.error('Error playing video:', err);
+        }
+      };
+      
+      playVideo();
+    }
+  }, [stream]);
 
   useEffect(() => {
-    if (initialPosition && isAnimating) {
+    if (initialPosition && (initialPosition.x !== position.x || initialPosition.y !== position.y)) {
       setPosition(initialPosition);
     }
-  }, [initialPosition, isAnimating]);
+  }, [initialPosition]);
 
-  useEffect(() => {
-    if (stream) {
-      console.log('ParticipantTile stream for', name, ':', stream.id, 'Video tracks:', stream.getVideoTracks().length);
-    }
-  }, [stream, name]);
-
-  const handleDragStart = (e: React.DragEvent) => {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isMovable) return;
+    
+    e.preventDefault();
     setIsDragging(true);
-    const rect = tileRef.current?.getBoundingClientRect();
-    if (rect) {
-      dragStartPos.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!tileRef.current || !isDragging) return;
+      
+      const container = tileRef.current.parentElement;
+      if (!container) return;
+      
+      const containerRect = container.getBoundingClientRect();
+      
+      // Calculate position as percentage of container
+      const newX = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+      const newY = ((e.clientY - containerRect.top) / containerRect.height) * 100;
+      
+      // Keep within bounds
+      const boundedX = Math.max(0, Math.min(100, newX));
+      const boundedY = Math.max(0, Math.min(100, newY));
+      
+      setPosition({ x: boundedX, y: boundedY });
+      
+      if (onPositionChange) {
+        onPositionChange({ x: boundedX, y: boundedY });
+      }
+    };
+    
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  };
+  
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMovable) return;
+    
+    setIsDragging(true);
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!tileRef.current || !isDragging) return;
+      
+      const touch = e.touches[0];
+      const container = tileRef.current.parentElement;
+      if (!container) return;
+      
+      const containerRect = container.getBoundingClientRect();
+      
+      // Calculate position as percentage of container
+      const newX = ((touch.clientX - containerRect.left) / containerRect.width) * 100;
+      const newY = ((touch.clientY - containerRect.top) / containerRect.height) * 100;
+      
+      // Keep within bounds
+      const boundedX = Math.max(0, Math.min(100, newX));
+      const boundedY = Math.max(0, Math.min(100, newY));
+      
+      setPosition({ x: boundedX, y: boundedY });
+      
+      if (onPositionChange) {
+        onPositionChange({ x: boundedX, y: boundedY });
+      }
+    };
+    
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+    
+    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchend', handleTouchEnd);
+  };
+
+  const getBackgroundStyle = () => {
+    if (!background) return {};
+    
+    if (background.type === 'color') {
+      return { background: background.value };
+    } else {
+      return {
+        backgroundImage: `url(${background.value})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       };
     }
-    e.dataTransfer.setData('text/plain', '');
   };
 
-  const handleDrag = (e: React.DragEvent) => {
-    if (!e.clientX || !e.clientY) return;
-    
-    setPosition({
-      x: e.clientX - dragStartPos.current.x,
-      y: e.clientY - dragStartPos.current.y
-    });
-  };
-
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    console.log('Participant moved to:', position);
-  };
-
-  useEffect(() => {
-    const checkRadiusIntersection = () => {
-      const currentTile = tileRef.current;
-      if (!currentTile) return;
-
-      const otherTiles = document.querySelectorAll('.participant-tile');
-      let hasIntersection = false;
-
-      otherTiles.forEach(tile => {
-        if (tile === currentTile) return;
-
-        const rect1 = currentTile.getBoundingClientRect();
-        const rect2 = tile.getBoundingClientRect();
-
-        const center1 = {
-          x: rect1.left + rect1.width / 2,
-          y: rect1.top + rect1.height / 2
-        };
-
-        const center2 = {
-          x: rect2.left + rect2.width / 2,
-          y: rect2.top + rect2.height / 2
-        };
-
-        const distance = Math.sqrt(
-          Math.pow(center2.x - center1.x, 2) + Math.pow(center2.y - center1.y, 2)
-        );
-
-        if (distance < (radiusSize * 2)) {
-          hasIntersection = true;
-          console.log(`${name}'s radius is intersecting with another participant`);
-        }
-      });
-
-      setIsInRange(hasIntersection);
-    };
-
-    // Only check radius intersection if not a self-view component
-    if (!isSelfView) {
-      checkRadiusIntersection();
-    }
-  }, [position, radiusSize, name, isSelfView]);
-
-  // Handle video errors
-  const handleVideoError = (error: Error) => {
-    console.error(`Video error for ${name}:`, error);
-    setHasVideoError(true);
-    toast({
-      variant: "destructive",
-      title: `Video Error for ${name}`,
-      description: error.message || "There was a problem with the video stream.",
-    });
-    
-    // Attempt recovery after a short delay
-    setTimeout(() => {
-      setHasVideoError(false);
-    }, 5000);
-  };
-
-  // Determine if the stream is a screen share
-  const isScreenShare = stream?.getVideoTracks().some(track => 
-    track.label.includes('screen') || 
-    track.label.includes('window') || 
-    track.label.includes('tab')
-  );
+  const tileStyle = initialPosition ? {
+    position: 'absolute',
+    left: `${position.x}%`,
+    top: `${position.y}%`,
+    transform: 'translate(-50%, -50%)',
+    transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'left 0.3s ease, top 0.3s ease'
+  } : {};
 
   return (
     <div
       ref={tileRef}
       className={cn(
-        "participant-tile relative cursor-move p-1",
-        isDragging && "opacity-75",
-        isSelfView && "self-view",
-        isAnimating && !isSelfView && "animate-float-in",
-        isSelfView && isAnimating && "animate-pulse-once",
+        "relative rounded-lg overflow-hidden shadow-lg border border-border",
+        isMovable ? "cursor-move" : "",
         className
       )}
-      draggable={!isSelfView}
-      onDragStart={handleDragStart}
-      onDrag={handleDrag}
-      onDragEnd={handleDragEnd}
       style={{
-        position: isSelfView ? 'relative' : 'absolute',
-        left: isSelfView ? 'auto' : `${position.x}px`,
-        top: isSelfView ? 'auto' : `${position.y}px`,
-        transform: `translate(${isDragging ? '-4px, -4px' : '0, 0'})`,
-        transition: isAnimating ? 'all 1s cubic-bezier(0.34, 1.56, 0.64, 1)' : 
-                   isDragging ? 'none' : 'transform 0.2s ease-out, left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        zIndex: isDragging ? 10 : isSelfView ? 5 : 1,
+        width: `${radiusSize * 2}px`,
+        height: `${radiusSize * 2}px`,
+        minWidth: '120px',
+        minHeight: '120px',
+        maxWidth: '400px',
+        maxHeight: '400px',
+        ...tileStyle,
+        ...getBackgroundStyle()
       }}
+      onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
     >
-      <div 
-        className={cn(
-          "overflow-hidden bg-muted relative",
-          isScreenShare ? "w-full h-full rounded-lg" : "rounded-full",
-          isSelfView && isAnimating && "animate-subtle-pulse"
-        )}
-        style={{
-          width: isScreenShare ? '100%' : `${radiusSize * 2}px`,
-          height: isScreenShare ? '100%' : `${radiusSize * 2}px`,
-          transition: 'all 0.3s ease-in-out'
-        }}
-      >
-        {hasVideoError ? (
-          <div className="absolute inset-0 flex items-center justify-center bg-destructive/10">
-            <div className="text-destructive flex flex-col items-center gap-2">
-              <AlertTriangle className="w-8 h-8" />
-              <p className="text-xs font-medium">Video error</p>
-            </div>
-          </div>
-        ) : (
-          <VideoDisplay 
-            stream={stream}
-            isVideoOn={isVideoOn}
-            isScreenShare={!!isScreenShare}
-            isAudioOn={isAudioOn}
-            onVideoError={handleVideoError}
-            className="w-full h-full"
-          />
-        )}
-        
-        {(!stream || (!isVideoOn && !isScreenShare)) && !hasVideoError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-secondary/10">
-            <div className="w-24 h-24 rounded-full bg-secondary/20 flex items-center justify-center text-2xl font-semibold">
-              {name.charAt(0).toUpperCase()}
-            </div>
-          </div>
-        )}
-
-        <AudioStream 
-          stream={stream}
-          isAudioOn={isAudioOn}
-          volume={isInRange ? 1 : 0}
+      {isVideoOn && stream ? (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted={isSelfView}
+          className="w-full h-full object-cover"
         />
-
-        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 bg-black/40 rounded-full px-2 py-1">
-          {isAudioOn ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3 text-destructive" />}
-          {isVideoOn ? <Video className="w-3 h-3" /> : <VideoOff className="w-3 h-3 text-destructive" />}
-          {isScreenShare && <Monitor className="w-3 h-3" />}
+      ) : (
+        <div className="w-full h-full flex items-center justify-center bg-muted">
+          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-xl font-semibold">
+            {name.charAt(0).toUpperCase()}
+          </div>
         </div>
-        
-        {!isScreenShare && !isSelfView && (
-          <div 
-            className={cn(
-              "absolute inset-0 pointer-events-none participant-radius",
-              isAnimating && "animate-glow-pulse"
-            )}
-            style={{
-              background: `radial-gradient(circle at center, transparent ${radiusSize * 0.5}px, ${isInRange ? 'rgba(99, 102, 241, 0.2)' : 'rgba(99, 102, 241, 0.1)'} ${radiusSize}px)`,
-              transition: 'all 0.3s ease-in-out'
-            }}
-          />
-        )}
-
-        {!isScreenShare && isSelfView && (
-          <div 
-            className={cn(
-              "absolute inset-0 pointer-events-none host-radius",
-              isAnimating && "animate-glow-pulse"
-            )}
-            style={{
-              background: `radial-gradient(circle at center, transparent ${radiusSize * 0.5}px, rgba(155, 135, 245, 0.2) ${radiusSize}px)`,
-              transition: 'all 0.3s ease-in-out'
-            }}
-          />
-        )}
+      )}
+      
+      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 flex justify-between items-center">
+        <span className="text-sm font-medium truncate">{name}</span>
+        <div className="flex gap-1">
+          {isAudioOn ? (
+            <Mic className="w-4 h-4 text-green-400" />
+          ) : (
+            <MicOff className="w-4 h-4 text-red-400" />
+          )}
+          {isVideoOn ? (
+            <Video className="w-4 h-4 text-green-400" />
+          ) : (
+            <VideoOff className="w-4 h-4 text-red-400" />
+          )}
+        </div>
       </div>
+      
+      {isSelfView && (
+        <div className="absolute top-2 left-2 bg-primary/80 text-white text-xs px-1.5 py-0.5 rounded">
+          You
+        </div>
+      )}
+      
+      {isMovable && (
+        <div className="absolute top-2 right-2 bg-primary/80 rounded-full p-1 text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="5 9 2 12 5 15"></polyline>
+            <polyline points="9 5 12 2 15 5"></polyline>
+            <polyline points="15 19 12 22 9 19"></polyline>
+            <polyline points="19 9 22 12 19 15"></polyline>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <line x1="12" y1="2" x2="12" y2="22"></line>
+          </svg>
+        </div>
+      )}
     </div>
   );
 };

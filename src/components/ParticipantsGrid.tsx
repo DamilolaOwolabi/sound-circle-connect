@@ -17,12 +17,20 @@ interface ParticipantsGridProps {
     stream: MediaStream | null;
     screenStream: MediaStream | null;
     background?: BackgroundOption | null;
+    position?: { x: number, y: number };
   };
   mockParticipants: Participant[];
   remoteParticipants?: Participant[];
+  onLocalUserPositionChange?: (position: { x: number, y: number }) => void;
 }
 
-const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipants = [] }: ParticipantsGridProps) => {
+const ParticipantsGrid = ({ 
+  layout, 
+  localUser, 
+  mockParticipants, 
+  remoteParticipants = [],
+  onLocalUserPositionChange
+}: ParticipantsGridProps) => {
   // Determine which stream to use (screen share has priority)
   const activeStream = localUser.screenStream || localUser.stream;
   
@@ -33,7 +41,8 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipa
   const { isAnimating, participantsWithPositions } = useParticipantAnimations({
     layout,
     allParticipants,
-    localUserRadiusSize: localUser.radiusSize
+    localUserRadiusSize: localUser.radiusSize,
+    localUserPosition: localUser.position
   });
   
   // Log stream info for debugging
@@ -64,6 +73,8 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipa
         layout={layout}
         isAnimating={isAnimating}
         background={localUser.background}
+        position={localUser.position}
+        onPositionChange={onLocalUserPositionChange}
       />
       
       {layout === 'grid' ? (
@@ -71,7 +82,8 @@ const ParticipantsGrid = ({ layout, localUser, mockParticipants, remoteParticipa
       ) : (
         <SpotlightLayout 
           participantsWithPositions={participantsWithPositions} 
-          isAnimating={isAnimating} 
+          isAnimating={isAnimating}
+          localUserPosition={localUser.position}
         />
       )}
     </div>

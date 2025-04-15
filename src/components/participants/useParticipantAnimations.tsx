@@ -6,12 +6,14 @@ interface UseParticipantAnimationsProps {
   layout: 'grid' | 'spotlight';
   allParticipants: Participant[];
   localUserRadiusSize: number;
+  localUserPosition?: { x: number, y: number };
 }
 
 const useParticipantAnimations = ({ 
   layout, 
   allParticipants,
-  localUserRadiusSize 
+  localUserRadiusSize,
+  localUserPosition = { x: 50, y: 50 }  // Default to center if not provided
 }: UseParticipantAnimationsProps) => {
   const [isAnimating, setIsAnimating] = useState(true);
   const [participantsWithPositions, setParticipantsWithPositions] = useState<ParticipantWithPosition[]>([]);
@@ -50,11 +52,15 @@ const useParticipantAnimations = ({
         // This creates better spacing and prevents overlaps
         const minDistance = localUserRadiusSize * 2 + p.radiusSize;
         
+        // Calculate final position using the local user position as center
+        const centerX = localUserPosition.x; // This should be % of viewport width
+        const centerY = localUserPosition.y; // This should be % of viewport height
+        
         return {
           ...p,
           position: {
-            x: Math.cos(angle) * minDistance,
-            y: Math.sin(angle) * minDistance
+            x: centerX + Math.cos(angle) * minDistance / 10, // Adjust the division factor based on your UI scale
+            y: centerY + Math.sin(angle) * minDistance / 10  // Lower values create larger circles
           }
         };
       });
@@ -68,7 +74,7 @@ const useParticipantAnimations = ({
     return () => {
       clearTimeout(shuffleTimeout);
     };
-  }, [layout, allParticipants, localUserRadiusSize]);
+  }, [layout, allParticipants, localUserRadiusSize, localUserPosition]);
 
   return {
     isAnimating,

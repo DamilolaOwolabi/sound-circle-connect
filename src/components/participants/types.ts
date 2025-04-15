@@ -10,4 +10,5 @@ export interface Participant {
 
 export interface ParticipantWithPosition extends Participant {
   position?: { x: number, y: number };
+  isMovable?: boolean;
 }

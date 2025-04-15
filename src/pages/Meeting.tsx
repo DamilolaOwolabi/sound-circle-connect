@@ -82,6 +82,7 @@ const Meeting = () => {
   const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
   const [radiusSize, setRadiusSize] = useState(50);
   const [maxRadius, setMaxRadius] = useState(MAX_RADIUS);
+  const [radiusPosition, setRadiusPosition] = useState({ x: 50, y: 50 });
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [meetingBackground, setMeetingBackground] = useState<BackgroundOption>(BACKGROUND_COLORS[0]);
   const [isPanelsVisible, setIsPanelsVisible] = useState(false);
@@ -166,6 +167,11 @@ const Meeting = () => {
 
   const handleAssignParticipant = (roomId: string, participantId: string) => {
     console.log('Assigning participant to room:', { roomId, participantId });
+  };
+
+  const handleRadiusPositionChange = (position: { x: number, y: number }) => {
+    setRadiusPosition(position);
+    console.log('Radius position changed to:', position);
   };
 
   const handleRadiusChange = (value: number[]) => {
@@ -335,10 +341,12 @@ const Meeting = () => {
                 radiusSize,
                 stream,
                 screenStream,
-                background: meetingBackground
+                background: meetingBackground,
+                position: radiusPosition
               }}
               mockParticipants={participants}
               remoteParticipants={remoteParticipantsData}
+              onLocalUserPositionChange={handleRadiusPositionChange}
             />
           </div>
           
@@ -374,6 +382,8 @@ const Meeting = () => {
                         onRadiusChange={handleRadiusChange}
                         minRadius={MIN_RADIUS}
                         maxRadius={maxRadius}
+                        position={radiusPosition}
+                        onPositionChange={handleRadiusPositionChange}
                       />
                     </TabsContent>
 
