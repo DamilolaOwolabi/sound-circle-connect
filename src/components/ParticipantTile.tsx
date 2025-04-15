@@ -1,6 +1,7 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
+import { Mic, MicOff, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
 import { BackgroundOption } from './BackgroundSelector';
 
 interface ParticipantTileProps {
@@ -16,6 +17,8 @@ interface ParticipantTileProps {
   initialPosition?: { x: number, y: number };
   isAnimating?: boolean;
   isMovable?: boolean;
+  isConnected?: boolean;
+  speakingMode?: 'private' | 'classroom' | 'muted';
   onPositionChange?: (position: { x: number, y: number }) => void;
 }
 
@@ -32,6 +35,8 @@ const ParticipantTile = ({
   initialPosition,
   isAnimating = false,
   isMovable = false,
+  isConnected = false,
+  speakingMode = 'private',
   onPositionChange
 }: ParticipantTileProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -175,6 +180,46 @@ const ParticipantTile = ({
     }
   };
 
+  // Get modes indication color
+  const getModeColor = () => {
+    switch (speakingMode) {
+      case 'private':
+        return 'rgba(155, 135, 245, 0.2)';
+      case 'classroom':
+        return 'rgba(52, 211, 153, 0.2)';
+      case 'muted':
+        return 'rgba(239, 68, 68, 0.2)';
+      default:
+        return 'rgba(155, 135, 245, 0.2)';
+    }
+  };
+
+  // Get modes border color
+  const getModeBorderColor = () => {
+    switch (speakingMode) {
+      case 'private':
+        return '#9b87f5';
+      case 'classroom':
+        return '#34d399';
+      case 'muted':
+        return '#ef4444';
+      default:
+        return '#9b87f5';
+    }
+  };
+
+  // Get speaking mode icon
+  const getModeIcon = () => {
+    switch (speakingMode) {
+      case 'private':
+        return <Mic className="w-4 h-4" />;
+      case 'classroom':
+        return <Volume2 className="w-4 h-4" />;
+      case 'muted':
+        return <VolumeX className="w-4 h-4" />;
+    }
+  };
+
   const tileStyle: React.CSSProperties = {
     ...(initialPosition ? {
       position: 'absolute',
@@ -189,9 +234,15 @@ const ParticipantTile = ({
     minHeight: '60px',
     maxWidth: '400px',
     maxHeight: '400px',
-    borderRadius: '50%', // Ensure it's a perfect circle
-    aspectRatio: '1 / 1', // Force perfect aspect ratio
-    boxShadow: isMovable && isDragging ? '0 0 15px rgba(155, 135, 245, 0.8)' : '0 4px 8px rgba(0, 0, 0, 0.1)',
+    borderRadius: '50%', 
+    aspectRatio: '1 / 1',
+    boxShadow: isMovable && isDragging 
+      ? '0 0 15px rgba(155, 135, 245, 0.8)' 
+      : isConnected 
+        ? '0 0 15px rgba(52, 211, 153, 0.6)' 
+        : '0 4px 8px rgba(0, 0, 0, 0.1)',
+    background: getModeColor(),
+    border: `2px ${isSelfView ? 'solid' : 'dashed'} ${getModeBorderColor()}`,
     ...getBackgroundStyle()
   };
 
@@ -199,7 +250,7 @@ const ParticipantTile = ({
     <div
       ref={tileRef}
       className={cn(
-        "relative overflow-hidden shadow-lg border border-border",
+        "relative overflow-hidden",
         isMovable ? "cursor-move" : "",
         isDragging ? "z-10" : "",
         className
@@ -219,7 +270,7 @@ const ParticipantTile = ({
           className="w-full h-full object-cover"
         />
       ) : (
-        <div className="w-full h-full flex items-center justify-center bg-muted">
+        <div className="w-full h-full flex items-center justify-center">
           <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-xl font-semibold">
             {name.charAt(0).toUpperCase()}
           </div>
@@ -248,16 +299,15 @@ const ParticipantTile = ({
         </div>
       )}
       
-      {isMovable && (
-        <div className="absolute top-2 right-2 bg-primary/80 rounded-full p-1 text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="5 9 2 12 5 15"></polyline>
-            <polyline points="9 5 12 2 15 5"></polyline>
-            <polyline points="15 19 12 22 9 19"></polyline>
-            <polyline points="19 9 22 12 19 15"></polyline>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
-            <line x1="12" y1="2" x2="12" y2="22"></line>
-          </svg>
+      {isSelfView && speakingMode && (
+        <div className="absolute top-2 right-2 bg-primary/80 text-white rounded-full p-1">
+          {getModeIcon()}
+        </div>
+      )}
+      
+      {isConnected && !isSelfView && (
+        <div className="absolute top-2 right-2 bg-green-500/80 text-white text-xs px-1.5 py-0.5 rounded">
+          Connected
         </div>
       )}
     </div>

@@ -1,15 +1,21 @@
 
 import React, { useState, useEffect } from 'react';
 import ParticipantTile from '../ParticipantTile';
-import { ParticipantWithPosition } from './types';
+import { ParticipantWithPosition, AudioConnection } from './types';
 
 interface SpotlightLayoutProps {
   participantsWithPositions: ParticipantWithPosition[];
   isAnimating: boolean;
   localUserPosition?: { x: number, y: number };
+  audioConnections?: AudioConnection[];
 }
 
-const SpotlightLayout = ({ participantsWithPositions, isAnimating, localUserPosition }: SpotlightLayoutProps) => {
+const SpotlightLayout = ({ 
+  participantsWithPositions, 
+  isAnimating, 
+  localUserPosition,
+  audioConnections = []
+}: SpotlightLayoutProps) => {
   // Calculate viewport dimensions for position conversion
   const [viewportDimensions, setViewportDimensions] = useState({
     width: 0,
@@ -33,16 +39,27 @@ const SpotlightLayout = ({ participantsWithPositions, isAnimating, localUserPosi
     
     return () => window.removeEventListener('resize', updateDimensions);
   }, []);
+
+  // Determine if a participant is connected to the local user
+  const isConnectedToLocalUser = (participantId: string): boolean => {
+    return audioConnections.some(
+      conn => 
+        (conn.sourceId === 'local-user' && conn.targetId === participantId && conn.isConnected) ||
+        (conn.targetId === 'local-user' && conn.sourceId === participantId && conn.isConnected)
+    );
+  };
   
   return (
     <div className="relative flex items-center justify-center w-full h-full spotlight-container">
       {participantsWithPositions.map((participant) => {
         // Use either the calculated position or position from props if manually positioned
         const finalPosition = participant.position || { x: 0, y: 0 };
+        const isConnected = isConnectedToLocalUser(participant.id);
         
         return (
           <ParticipantTile
             key={participant.id}
+            id={participant.id}
             name={participant.name}
             isAudioOn={participant.isAudioOn}
             isVideoOn={participant.isVideoOn}
@@ -51,7 +68,9 @@ const SpotlightLayout = ({ participantsWithPositions, isAnimating, localUserPosi
             className="radius-mode-participant"
             initialPosition={finalPosition}
             isAnimating={isAnimating}
-            isMovable={participant.id === 'local-user'} // Only local user is movable
+            isMovable={participant.isMovable || false}
+            isConnected={isConnected}
+            speakingMode={participant.speakingMode}
           />
         );
       })}

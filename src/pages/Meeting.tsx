@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Controls from '@/components/Controls';
@@ -79,7 +80,7 @@ const ALL_BACKGROUND_OPTIONS: BackgroundOption[] = [
 ];
 
 const Meeting = () => {
-  const [layout, setLayout] = useState<'grid' | 'spotlight'>('grid');
+  const [layout, setLayout] = useState<'grid' | 'spotlight'>('spotlight'); // Default to spotlight for radius mode
   const [radiusSize, setRadiusSize] = useState(50);
   const [maxRadius, setMaxRadius] = useState(MAX_RADIUS);
   const [radiusPosition, setRadiusPosition] = useState({ x: 50, y: 50 });
@@ -87,6 +88,7 @@ const Meeting = () => {
   const [meetingBackground, setMeetingBackground] = useState<BackgroundOption>(BACKGROUND_COLORS[0]);
   const [isPanelsVisible, setIsPanelsVisible] = useState(false);
   const [activeTab, setActiveTab] = useState('participants');
+  const [speakingMode, setSpeakingMode] = useState<'private' | 'classroom' | 'muted'>('private');
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -177,6 +179,24 @@ const Meeting = () => {
   const handleRadiusChange = (value: number[]) => {
     setRadiusSize(value[0]);
     console.log('Radius size changed to:', value[0]);
+  };
+
+  const handleSpeakingModeChange = (mode: 'private' | 'classroom' | 'muted') => {
+    setSpeakingMode(mode);
+    
+    // Additional behavior based on mode
+    if (mode === 'muted') {
+      toggleAudio(); // Turn off audio when muted mode is selected
+    }
+    
+    toast({
+      title: `${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode Activated`,
+      description: mode === 'private' 
+        ? "You can only be heard by users within your radius."
+        : mode === 'classroom'
+          ? "You can be heard by everyone in the meeting."
+          : "You are muted and cannot be heard.",
+    });
   };
 
   const toggleLayout = () => {
@@ -342,11 +362,13 @@ const Meeting = () => {
                 stream,
                 screenStream,
                 background: meetingBackground,
-                position: radiusPosition
+                position: radiusPosition,
+                speakingMode
               }}
               mockParticipants={participants}
               remoteParticipants={remoteParticipantsData}
               onLocalUserPositionChange={handleRadiusPositionChange}
+              onSpeakingModeChange={handleSpeakingModeChange}
             />
           </div>
           
@@ -384,6 +406,8 @@ const Meeting = () => {
                         maxRadius={maxRadius}
                         position={radiusPosition}
                         onPositionChange={handleRadiusPositionChange}
+                        speakingMode={speakingMode}
+                        onSpeakingModeChange={handleSpeakingModeChange}
                       />
                     </TabsContent>
 

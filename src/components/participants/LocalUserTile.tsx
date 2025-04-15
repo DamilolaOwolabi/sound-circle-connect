@@ -13,6 +13,7 @@ interface LocalUserTileProps {
   background?: BackgroundOption | null;
   position?: { x: number, y: number };
   onPositionChange?: (position: { x: number, y: number }) => void;
+  speakingMode?: 'private' | 'classroom' | 'muted';
 }
 
 const LocalUserTile = ({
@@ -24,7 +25,8 @@ const LocalUserTile = ({
   isAnimating,
   background,
   position,
-  onPositionChange
+  onPositionChange,
+  speakingMode = 'private'
 }: LocalUserTileProps) => {
   return (
     <ParticipantTile
@@ -42,6 +44,7 @@ const LocalUserTile = ({
       initialPosition={position}
       isMovable={layout === 'spotlight'} // Only enable movement in spotlight mode
       onPositionChange={onPositionChange}
+      speakingMode={speakingMode}
     />
   );
 };
