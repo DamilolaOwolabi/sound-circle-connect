@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Mic, MicOff, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
 import { BackgroundOption } from './BackgroundSelector';
+import { Avatar, AvatarFallback } from './ui/avatar';
 
 interface ParticipantTileProps {
   id?: string;
@@ -183,17 +184,27 @@ const ParticipantTile = ({
     }
   };
 
+  // Get initials for avatar fallback
+  const getInitials = () => {
+    return name
+      .split(' ')
+      .map(part => part.charAt(0))
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   // Get modes indication color
   const getModeColor = () => {
     switch (speakingMode) {
       case 'private':
-        return 'rgba(155, 135, 245, 0.2)';
+        return 'rgba(78, 115, 223, 0.2)';
       case 'classroom':
-        return 'rgba(52, 211, 153, 0.2)';
+        return 'rgba(28, 200, 138, 0.2)';
       case 'muted':
-        return 'rgba(239, 68, 68, 0.2)';
+        return 'rgba(231, 74, 59, 0.2)';
       default:
-        return 'rgba(155, 135, 245, 0.2)';
+        return 'rgba(78, 115, 223, 0.2)';
     }
   };
 
@@ -201,13 +212,13 @@ const ParticipantTile = ({
   const getModeBorderColor = () => {
     switch (speakingMode) {
       case 'private':
-        return '#9b87f5';
+        return '#4e73df';
       case 'classroom':
-        return '#34d399';
+        return '#1cc88a';
       case 'muted':
-        return '#ef4444';
+        return '#e74a3b';
       default:
-        return '#9b87f5';
+        return '#4e73df';
     }
   };
 
@@ -229,20 +240,20 @@ const ParticipantTile = ({
       left: `${position.x}%`,
       top: `${position.y}%`,
       transform: 'translate(-50%, -50%)',
-      transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'left 0.3s ease, top 0.3s ease',
+      transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'none',
     } : {}),
     width: `${radiusSize * 2}px`,
     height: `${radiusSize * 2}px`,
     minWidth: '60px',
     minHeight: '60px',
-    maxWidth: '400px',
-    maxHeight: '400px',
+    maxWidth: '300px',
+    maxHeight: '300px',
     borderRadius: '50%', 
     aspectRatio: '1/1',
     boxShadow: isMovable && isDragging 
-      ? '0 0 15px rgba(155, 135, 245, 0.8)' 
+      ? '0 0 15px rgba(78, 115, 223, 0.8)' 
       : isConnected 
-        ? '0 0 15px rgba(52, 211, 153, 0.6)' 
+        ? '0 0 15px rgba(28, 200, 138, 0.6)' 
         : '0 4px 8px rgba(0, 0, 0, 0.1)',
     background: getModeColor(),
     border: `2px ${isSelfView ? 'solid' : 'dashed'} ${getModeBorderColor()}`,
@@ -275,40 +286,51 @@ const ParticipantTile = ({
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center">
-          <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-xl font-semibold">
-            {name.charAt(0).toUpperCase()}
+          <div className="w-full h-full rounded-full bg-gradient-to-br from-[#4e73df] to-[#1cc88a] flex items-center justify-center text-white text-2xl font-semibold">
+            {getInitials()}
           </div>
         </div>
       )}
       
-      <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 flex justify-between items-center">
+      {/* Status bar at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 bg-black/50 backdrop-blur-sm text-white px-2 py-1 flex justify-between items-center">
         <span className="text-sm font-medium truncate">{name}</span>
         <div className="flex gap-1">
-          {isAudioOn ? (
-            <Mic className="w-4 h-4 text-green-400" />
-          ) : (
-            <MicOff className="w-4 h-4 text-red-400" />
-          )}
-          {isVideoOn ? (
-            <Video className="w-4 h-4 text-green-400" />
-          ) : (
-            <VideoOff className="w-4 h-4 text-red-400" />
-          )}
+          {/* Audio status icon */}
+          <div className="relative">
+            {isAudioOn ? (
+              <Mic className="w-4 h-4 text-green-400" />
+            ) : (
+              <MicOff className="w-4 h-4 text-red-400" />
+            )}
+          </div>
+          
+          {/* Video status icon */}
+          <div className="relative">
+            {isVideoOn ? (
+              <Video className="w-4 h-4 text-green-400" />
+            ) : (
+              <VideoOff className="w-4 h-4 text-red-400" />
+            )}
+          </div>
         </div>
       </div>
       
+      {/* Self view indicator */}
       {isSelfView && (
         <div className="absolute top-2 left-2 bg-primary/80 text-white text-xs px-1.5 py-0.5 rounded">
           You
         </div>
       )}
       
+      {/* Speaking mode indicator */}
       {isSelfView && speakingMode && (
         <div className="absolute top-2 right-2 bg-primary/80 text-white rounded-full p-1">
           {getModeIcon()}
         </div>
       )}
       
+      {/* Connection status indicator */}
       {isConnected && !isSelfView && (
         <div className="absolute top-2 right-2 bg-green-500/80 text-white text-xs px-1.5 py-0.5 rounded">
           Connected
