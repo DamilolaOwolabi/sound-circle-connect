@@ -45,6 +45,7 @@ const ParticipantTile = ({
   const [position, setPosition] = useState(initialPosition || { x: 50, y: 50 });
   const tileRef = useRef<HTMLDivElement>(null);
   const dragOffset = useRef({ x: 0, y: 0 });
+  const [hasAnimated, setHasAnimated] = useState(false);
 
   // Connect stream to video element when stream changes
   useEffect(() => {
@@ -70,6 +71,14 @@ const ParticipantTile = ({
       setPosition(initialPosition);
     }
   }, [initialPosition, position.x, position.y]);
+
+  // Handle animation state
+  useEffect(() => {
+    if (isAnimating && !isSelfView && !hasAnimated) {
+      // Mark that this participant has been animated
+      setHasAnimated(true);
+    }
+  }, [isAnimating, isSelfView, hasAnimated]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isMovable || !tileRef.current) return;
@@ -240,7 +249,11 @@ const ParticipantTile = ({
       left: `${position.x}%`,
       top: `${position.y}%`,
       transform: 'translate(-50%, -50%)',
-      transition: isDragging ? 'none' : isAnimating ? 'left 0.8s ease-out, top 0.8s ease-out' : 'none',
+      transition: isDragging 
+        ? 'none' 
+        : isAnimating 
+          ? 'left 2s cubic-bezier(0.34, 1.56, 0.64, 1), top 2s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s ease-out, opacity 0.5s ease-out' 
+          : 'none',
     } : {}),
     width: `${radiusSize * 2}px`,
     height: `${radiusSize * 2}px`,
@@ -260,6 +273,14 @@ const ParticipantTile = ({
     ...getBackgroundStyle()
   };
 
+  // Add entrance animation styles when isAnimating is true
+  const animationStyles: React.CSSProperties = isAnimating && !isSelfView ? {
+    opacity: hasAnimated ? 1 : 0,
+    transform: hasAnimated 
+      ? 'translate(-50%, -50%) scale(1)' 
+      : 'translate(-50%, -50%) scale(0.5)',
+  } : {};
+
   return (
     <div
       ref={tileRef}
@@ -267,9 +288,10 @@ const ParticipantTile = ({
         "relative overflow-hidden",
         isMovable ? "cursor-move" : "",
         isDragging ? "z-10" : "",
+        isSelfView && isAnimating ? "animate-pulse" : "",
         className
       )}
-      style={tileStyle}
+      style={{...tileStyle, ...animationStyles}}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       aria-label={`${isMovable ? 'Movable ' : ''}participant ${name}`}
@@ -334,6 +356,14 @@ const ParticipantTile = ({
       {isConnected && !isSelfView && (
         <div className="absolute top-2 right-2 bg-green-500/80 text-white text-xs px-1.5 py-0.5 rounded">
           Connected
+        </div>
+      )}
+      
+      {/* Ripple effect when animation starts */}
+      {isSelfView && isAnimating && (
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 rounded-full animate-ping bg-primary/20"></div>
+          <div className="absolute inset-0 rounded-full animate-ping bg-primary/10 animation-delay-200"></div>
         </div>
       )}
     </div>

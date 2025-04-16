@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Participant, ParticipantWithPosition } from './types';
 
 interface UseParticipantAnimationsProps {
@@ -14,56 +14,81 @@ const useParticipantAnimations = ({
   localUserRadiusSize,
   localUserPosition = { x: 50, y: 50 }  // Default to center if not provided
 }: UseParticipantAnimationsProps) => {
-  const [isAnimating, setIsAnimating] = useState(false); // Start with no animation
+  const [isAnimating, setIsAnimating] = useState(false);
   const [participantsWithPositions, setParticipantsWithPositions] = useState<ParticipantWithPosition[]>([]);
+  const isFirstLoad = useRef(true);
 
-  // Position calculation effect without random animations
   useEffect(() => {
-    // Skip animation in all layouts - we don't want automatic movement
-    setIsAnimating(false);
-    
-    // For grid layout, positions aren't relevant
     if (layout === 'grid') {
-      // We still need to convert participants to ParticipantWithPosition
-      // but we don't need to set any positions
       const gridParticipants: ParticipantWithPosition[] = allParticipants.map(p => ({
         ...p,
-        position: { x: 50, y: 50 } // Default position, won't be used in grid layout
+        position: { x: 50, y: 50 }
       }));
       
       setParticipantsWithPositions(gridParticipants);
+      setIsAnimating(false);
       return;
     }
     
-    // For spotlight layout, assign stable positions
-    const stablePositions: ParticipantWithPosition[] = allParticipants.map((p, index) => {
-      // If participant already has a valid position, keep it
-      if ('position' in p && p.position && 
+    if (layout === 'spotlight' && isFirstLoad.current && allParticipants.length > 0) {
+      setIsAnimating(true);
+      
+      const animatedPositions: ParticipantWithPosition[] = allParticipants.map((p, index) => {
+        const startX = Math.random() > 0.5 ? -20 : 120;
+        const startY = Math.random() * 100;
+        
+        return {
+          ...p,
+          position: { x: startX, y: startY }
+        };
+      });
+      
+      setParticipantsWithPositions(animatedPositions);
+      
+      setTimeout(() => {
+        isFirstLoad.current = false;
+        
+        const stablePositions = calculateStablePositions(allParticipants, localUserPosition);
+        setParticipantsWithPositions(stablePositions);
+        
+        setTimeout(() => {
+          setIsAnimating(false);
+        }, 3000);
+      }, 500);
+    } else {
+      setIsAnimating(false);
+      const stablePositions = calculateStablePositions(allParticipants, localUserPosition);
+      setParticipantsWithPositions(stablePositions);
+    }
+  }, [layout, allParticipants, localUserPosition]);
+
+  const calculateStablePositions = (
+    participants: Participant[], 
+    centerPos: { x: number, y: number }
+  ): ParticipantWithPosition[] => {
+    return participants.map((p, index) => {
+      if ('position' in p && 
+          p.position && 
+          typeof p.position === 'object' && 
+          'x' in p.position && 
+          'y' in p.position && 
           typeof p.position.x === 'number' && 
           typeof p.position.y === 'number') {
         return {
           ...p,
-          position: p.position
+          position: p.position as { x: number, y: number }
         };
       }
       
-      // Otherwise, calculate a stable position based on index
-      // Use a deterministic algorithm that places participants in a circle
-      // around the meeting area, not around the local user
-      const totalParticipants = Math.max(1, allParticipants.length);
+      const totalParticipants = Math.max(1, participants.length);
       const angleStep = (2 * Math.PI) / totalParticipants;
       const angle = angleStep * index;
       
-      // Calculate positions in a circle around the center of the meeting area
-      // Not relative to the local user to prevent movement when local user moves
-      const centerX = 50; // Center of meeting area
-      const centerY = 50;
-      const radius = 35; // Fixed distance from center
+      const radius = 35;
       
-      const x = centerX + Math.cos(angle) * radius;
-      const y = centerY + Math.sin(angle) * radius;
+      const x = centerPos.x + Math.cos(angle) * radius;
+      const y = centerPos.y + Math.sin(angle) * radius;
       
-      // Ensure positions remain within bounds (5%-95%)
       const boundedX = Math.max(5, Math.min(95, x));
       const boundedY = Math.max(5, Math.min(95, y));
       
@@ -72,9 +97,7 @@ const useParticipantAnimations = ({
         position: { x: boundedX, y: boundedY }
       };
     });
-    
-    setParticipantsWithPositions(stablePositions);
-  }, [layout, allParticipants]);
+  };
 
   return {
     isAnimating,
