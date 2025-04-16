@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Participant, ParticipantWithPosition } from './types';
 
@@ -15,69 +14,57 @@ const useParticipantAnimations = ({
   localUserRadiusSize,
   localUserPosition = { x: 50, y: 50 }  // Default to center if not provided
 }: UseParticipantAnimationsProps) => {
-  const [isAnimating, setIsAnimating] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false); // Start with no animation
   const [participantsWithPositions, setParticipantsWithPositions] = useState<ParticipantWithPosition[]>([]);
 
-  // Entry animation and position calculation effect
+  // Position calculation effect without random animations
   useEffect(() => {
-    // Skip animation in grid layout
+    // Skip animation in all layouts - we don't want automatic movement
+    setIsAnimating(false);
+    
+    // For grid layout, positions aren't relevant
     if (layout === 'grid') {
-      setIsAnimating(false);
       return;
     }
     
-    // Add random positions for initial shuffle
-    const withRandomPositions = allParticipants.map((p) => ({
-      ...p,
-      position: {
-        // Create random positions within viewport bounds (0-100%)
-        x: Math.random() * 80 + 10, // Random position between 10% and 90%
-        y: Math.random() * 80 + 10  // Random position between 10% and 90%
-      }
-    }));
-    
-    setParticipantsWithPositions(withRandomPositions);
-    setIsAnimating(true);
-    
-    // First phase: Show random positions briefly (800ms)
-    const shuffleTimeout = setTimeout(() => {
-      // Second phase: Sort into positions around the local user in a circular pattern
-      const sortedPositions = allParticipants.map((p, index) => {
-        // Calculate positions in a circular pattern using polar coordinates
-        const totalParticipants = Math.max(1, allParticipants.length);
-        const angleStep = (2 * Math.PI) / totalParticipants;
-        const angle = angleStep * index;
-        
-        // Calculate spacing based on the local user's radius size
-        // and ensure participants are placed at a reasonable distance
-        const spacingFactor = 25; // Adjust this for larger/smaller circles
-        const distanceFromCenter = (localUserRadiusSize / spacingFactor) + 15;
-        
-        // Calculate final position using the local user position as center
-        // and convert from polar coordinates to cartesian (percentage-based)
-        const x = localUserPosition.x + Math.cos(angle) * distanceFromCenter;
-        const y = localUserPosition.y + Math.sin(angle) * distanceFromCenter;
-        
-        // Ensure positions remain within bounds (0-100%)
-        const boundedX = Math.max(5, Math.min(95, x));
-        const boundedY = Math.max(5, Math.min(95, y));
-        
+    // For spotlight layout, assign stable positions
+    const stablePositions = allParticipants.map((p, index) => {
+      // If participant already has a position, keep it
+      if ('position' in p && p.position) {
         return {
           ...p,
-          position: { x: boundedX, y: boundedY }
+          position: p.position
         };
-      });
+      }
       
-      setParticipantsWithPositions(sortedPositions);
+      // Otherwise, calculate a stable position based on index
+      // Use a deterministic algorithm that places participants in a circle
+      // around the meeting area, not around the local user
+      const totalParticipants = Math.max(1, allParticipants.length);
+      const angleStep = (2 * Math.PI) / totalParticipants;
+      const angle = angleStep * index;
       
-      // End animation after positions are sorted (with transition effect)
-      setTimeout(() => setIsAnimating(false), 1000);
-    }, 800);
+      // Calculate positions in a circle around the center of the meeting area
+      // Not relative to the local user to prevent movement when local user moves
+      const centerX = 50; // Center of meeting area
+      const centerY = 50;
+      const radius = 35; // Fixed distance from center
+      
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
+      
+      // Ensure positions remain within bounds (5%-95%)
+      const boundedX = Math.max(5, Math.min(95, x));
+      const boundedY = Math.max(5, Math.min(95, y));
+      
+      return {
+        ...p,
+        position: { x: boundedX, y: boundedY }
+      };
+    });
     
-    return () => {
-      clearTimeout(shuffleTimeout);
-    };
-  }, [layout, allParticipants, localUserRadiusSize, localUserPosition]);
+    setParticipantsWithPositions(stablePositions);
+  }, [layout, allParticipants]);
 
   return {
     isAnimating,

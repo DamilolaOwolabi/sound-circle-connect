@@ -36,15 +36,11 @@ const SpotlightLayout = ({
     
     updateDimensions();
     
-    // Update dimensions whenever the window is resized
+    // Only update on window resize - no periodic updates to prevent unwanted movement
     window.addEventListener('resize', updateDimensions);
-    
-    // Check dimensions periodically in case of container resizing without window resize
-    const dimensionInterval = setInterval(updateDimensions, 1000);
     
     return () => {
       window.removeEventListener('resize', updateDimensions);
-      clearInterval(dimensionInterval);
     };
   }, []);
 
@@ -75,7 +71,7 @@ const SpotlightLayout = ({
             stream={participant.stream}
             className="radius-mode-participant"
             initialPosition={finalPosition}
-            isAnimating={isAnimating}
+            isAnimating={false} // Force animation off
             isMovable={participant.isMovable || false}
             isConnected={isConnected}
             speakingMode={participant.speakingMode}

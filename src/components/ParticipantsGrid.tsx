@@ -68,12 +68,17 @@ const ParticipantsGrid = ({
     participants: participantsWithPositions
   });
   
-  // Handle tap on the meeting space - optimized to prevent multiple calls
+  // Handle tap on the meeting space - only for explicit user interaction
   const handleMeetingSpaceTap = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (layout !== 'spotlight' || !onLocalUserPositionChange) return;
     
     // Only handle left mouse clicks
     if (e.button !== 0) return;
+    
+    // Check if we clicked on a participant tile - if so, don't move
+    if ((e.target as HTMLElement).closest('.radius-mode-participant, .local-user-spotlight')) {
+      return;
+    }
     
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
