@@ -24,13 +24,23 @@ const useParticipantAnimations = ({
     
     // For grid layout, positions aren't relevant
     if (layout === 'grid') {
+      // We still need to convert participants to ParticipantWithPosition
+      // but we don't need to set any positions
+      const gridParticipants: ParticipantWithPosition[] = allParticipants.map(p => ({
+        ...p,
+        position: { x: 50, y: 50 } // Default position, won't be used in grid layout
+      }));
+      
+      setParticipantsWithPositions(gridParticipants);
       return;
     }
     
     // For spotlight layout, assign stable positions
-    const stablePositions = allParticipants.map((p, index) => {
-      // If participant already has a position, keep it
-      if ('position' in p && p.position) {
+    const stablePositions: ParticipantWithPosition[] = allParticipants.map((p, index) => {
+      // If participant already has a valid position, keep it
+      if ('position' in p && p.position && 
+          typeof p.position.x === 'number' && 
+          typeof p.position.y === 'number') {
         return {
           ...p,
           position: p.position
