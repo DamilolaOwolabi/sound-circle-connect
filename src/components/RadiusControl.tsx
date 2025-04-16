@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Slider } from '@/components/ui/slider';
 import { MapPin, Move } from 'lucide-react';
@@ -20,7 +19,7 @@ const RadiusControl = ({
   onRadiusChange, 
   minRadius, 
   maxRadius,
-  position = { x: 0, y: 0 },
+  position = { x: 50, y: 50 },
   onPositionChange,
   speakingMode = 'private',
   onSpeakingModeChange

@@ -18,7 +18,7 @@ const useParticipantAnimations = ({
   const [isAnimating, setIsAnimating] = useState(true);
   const [participantsWithPositions, setParticipantsWithPositions] = useState<ParticipantWithPosition[]>([]);
 
-  // Entry animation effect
+  // Entry animation and position calculation effect
   useEffect(() => {
     // Skip animation in grid layout
     if (layout === 'grid') {
@@ -30,44 +30,47 @@ const useParticipantAnimations = ({
     const withRandomPositions = allParticipants.map((p) => ({
       ...p,
       position: {
-        // Create more dramatic randomness by increasing the range
-        x: Math.random() * 300 - 150, // Random position between -150 and 150
-        y: Math.random() * 300 - 150  // Random position between -150 and 150
+        // Create random positions within viewport bounds (0-100%)
+        x: Math.random() * 80 + 10, // Random position between 10% and 90%
+        y: Math.random() * 80 + 10  // Random position between 10% and 90%
       }
     }));
     
     setParticipantsWithPositions(withRandomPositions);
     setIsAnimating(true);
     
-    // First phase: Shuffle animation (wait 800ms to show the random positions)
+    // First phase: Show random positions briefly (800ms)
     const shuffleTimeout = setTimeout(() => {
-      // Second phase: Sort into positions around the host using polar coordinates
+      // Second phase: Sort into positions around the local user in a circular pattern
       const sortedPositions = allParticipants.map((p, index) => {
         // Calculate positions in a circular pattern using polar coordinates
-        const angleStep = (2 * Math.PI) / allParticipants.length;
+        const totalParticipants = Math.max(1, allParticipants.length);
+        const angleStep = (2 * Math.PI) / totalParticipants;
         const angle = angleStep * index;
         
-        // Calculate radius based on user's radius size to maintain proper spacing
-        // Ensure participants are at least double the user's radius away plus their own radius
-        // This creates better spacing and prevents overlaps
-        const minDistance = localUserRadiusSize * 2 + p.radiusSize;
+        // Calculate spacing based on the local user's radius size
+        // and ensure participants are placed at a reasonable distance
+        const spacingFactor = 25; // Adjust this for larger/smaller circles
+        const distanceFromCenter = (localUserRadiusSize / spacingFactor) + 15;
         
         // Calculate final position using the local user position as center
-        const centerX = localUserPosition.x; // This should be % of viewport width
-        const centerY = localUserPosition.y; // This should be % of viewport height
+        // and convert from polar coordinates to cartesian (percentage-based)
+        const x = localUserPosition.x + Math.cos(angle) * distanceFromCenter;
+        const y = localUserPosition.y + Math.sin(angle) * distanceFromCenter;
+        
+        // Ensure positions remain within bounds (0-100%)
+        const boundedX = Math.max(5, Math.min(95, x));
+        const boundedY = Math.max(5, Math.min(95, y));
         
         return {
           ...p,
-          position: {
-            x: centerX + Math.cos(angle) * minDistance / 10, // Adjust the division factor based on your UI scale
-            y: centerY + Math.sin(angle) * minDistance / 10  // Lower values create larger circles
-          }
+          position: { x: boundedX, y: boundedY }
         };
       });
       
       setParticipantsWithPositions(sortedPositions);
       
-      // End animation after sorting completes with a smooth transition
+      // End animation after positions are sorted (with transition effect)
       setTimeout(() => setIsAnimating(false), 1000);
     }, 800);
     

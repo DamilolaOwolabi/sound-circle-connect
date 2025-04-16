@@ -16,7 +16,6 @@ const SpotlightLayout = ({
   localUserPosition,
   audioConnections = []
 }: SpotlightLayoutProps) => {
-  // Calculate viewport dimensions for position conversion
   const [viewportDimensions, setViewportDimensions] = useState({
     width: 0,
     height: 0
@@ -25,19 +24,28 @@ const SpotlightLayout = ({
   useEffect(() => {
     // Get the container dimensions for proper positioning
     const updateDimensions = () => {
-      const container = document.querySelector('.spotlight-container') as HTMLElement;
+      const container = document.querySelector('.spotlight-container');
       if (container) {
+        const rect = container.getBoundingClientRect();
         setViewportDimensions({
-          width: container.offsetWidth,
-          height: container.offsetHeight
+          width: rect.width,
+          height: rect.height
         });
       }
     };
     
     updateDimensions();
+    
+    // Update dimensions whenever the window is resized
     window.addEventListener('resize', updateDimensions);
     
-    return () => window.removeEventListener('resize', updateDimensions);
+    // Check dimensions periodically in case of container resizing without window resize
+    const dimensionInterval = setInterval(updateDimensions, 1000);
+    
+    return () => {
+      window.removeEventListener('resize', updateDimensions);
+      clearInterval(dimensionInterval);
+    };
   }, []);
 
   // Determine if a participant is connected to the local user
@@ -52,8 +60,8 @@ const SpotlightLayout = ({
   return (
     <div className="relative flex items-center justify-center w-full h-full spotlight-container">
       {participantsWithPositions.map((participant) => {
-        // Use either the calculated position or position from props if manually positioned
-        const finalPosition = participant.position || { x: 0, y: 0 };
+        // Use the calculated position or position from props if manually positioned
+        const finalPosition = participant.position || { x: 50, y: 50 };
         const isConnected = isConnectedToLocalUser(participant.id);
         
         return (

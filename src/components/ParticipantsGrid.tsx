@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useCallback } from 'react';
 import { cn } from '@/lib/utils';
 import LocalUserTile from './participants/LocalUserTile';
 import GridLayout from './participants/GridLayout';
@@ -68,32 +68,25 @@ const ParticipantsGrid = ({
     participants: participantsWithPositions
   });
   
-  // Handle tap on the meeting space
-  const handleMeetingSpaceTap = (e: React.MouseEvent<HTMLDivElement>) => {
+  // Handle tap on the meeting space - optimized to prevent multiple calls
+  const handleMeetingSpaceTap = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (layout !== 'spotlight' || !onLocalUserPositionChange) return;
+    
+    // Only handle left mouse clicks
+    if (e.button !== 0) return;
     
     const container = e.currentTarget;
     const rect = container.getBoundingClientRect();
     const newX = ((e.clientX - rect.left) / rect.width) * 100;
     const newY = ((e.clientY - rect.top) / rect.height) * 100;
     
-    onLocalUserPositionChange({ x: newX, y: newY });
-  };
+    // Ensure values are within bounds
+    const boundedX = Math.max(0, Math.min(100, newX));
+    const boundedY = Math.max(0, Math.min(100, newY));
+    
+    onLocalUserPositionChange({ x: boundedX, y: boundedY });
+  }, [layout, onLocalUserPositionChange]);
   
-  // Log stream info for debugging
-  React.useEffect(() => {
-    if (activeStream) {
-      console.log('ParticipantsGrid active stream:', activeStream.id);
-      console.log('Video tracks:', activeStream.getVideoTracks().map(t => ({
-        enabled: t.enabled,
-        readyState: t.readyState,
-        label: t.label
-      })));
-    } else {
-      console.log('ParticipantsGrid: No active stream');
-    }
-  }, [activeStream]);
-
   return (
     <div className="flex flex-col flex-1 min-h-[600px]">
       {layout === 'spotlight' && (

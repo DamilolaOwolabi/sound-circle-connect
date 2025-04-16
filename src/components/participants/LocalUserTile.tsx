@@ -28,6 +28,9 @@ const LocalUserTile = ({
   onPositionChange,
   speakingMode = 'private'
 }: LocalUserTileProps) => {
+  // For spotlight/radius mode, make the local user tile slightly larger
+  const adjustedRadiusSize = layout === 'spotlight' ? radiusSize * 1.2 : radiusSize;
+  
   return (
     <ParticipantTile
       key="local-user"
@@ -35,7 +38,7 @@ const LocalUserTile = ({
       name="You"
       isAudioOn={isAudioOn}
       isVideoOn={isVideoOn}
-      radiusSize={layout === 'spotlight' ? radiusSize * 1.2 : radiusSize}
+      radiusSize={adjustedRadiusSize}
       className={`${layout === 'grid' ? '' : 'local-user-spotlight'}`}
       stream={stream}
       background={background}

@@ -21,7 +21,9 @@ export const useRadiusAudio = ({ localUser, participants }: UseRadiusAudioProps)
     const distance = Math.sqrt(dx * dx + dy * dy);
     
     // If the distance is less than the sum of the radii, the radii overlap
-    const sumOfRadii = (p1.radiusSize + p2.radiusSize) / 10; // Adjust scale factor as needed
+    // The divisor of 5 is a scaling factor to make the overlap detection more intuitive
+    // based on percentage-based positioning (0-100%) in the container
+    const sumOfRadii = (p1.radiusSize + p2.radiusSize) / 5;
     return distance < sumOfRadii;
   };
   

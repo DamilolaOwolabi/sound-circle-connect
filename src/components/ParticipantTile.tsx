@@ -68,7 +68,7 @@ const ParticipantTile = ({
     if (initialPosition && (initialPosition.x !== position.x || initialPosition.y !== position.y)) {
       setPosition(initialPosition);
     }
-  }, [initialPosition]);
+  }, [initialPosition, position.x, position.y]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isMovable || !tileRef.current) return;
@@ -121,6 +121,9 @@ const ParticipantTile = ({
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!isMovable || !tileRef.current) return;
     
+    // Prevent default to avoid scrolling while dragging
+    e.preventDefault();
+    
     const touch = e.touches[0];
     const tileRect = tileRef.current.getBoundingClientRect();
     
@@ -162,7 +165,7 @@ const ParticipantTile = ({
       document.removeEventListener('touchend', handleTouchEnd);
     };
     
-    document.addEventListener('touchmove', handleTouchMove);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
     document.addEventListener('touchend', handleTouchEnd);
   };
 
@@ -235,7 +238,7 @@ const ParticipantTile = ({
     maxWidth: '400px',
     maxHeight: '400px',
     borderRadius: '50%', 
-    aspectRatio: '1 / 1',
+    aspectRatio: '1/1',
     boxShadow: isMovable && isDragging 
       ? '0 0 15px rgba(155, 135, 245, 0.8)' 
       : isConnected 
@@ -260,6 +263,7 @@ const ParticipantTile = ({
       onTouchStart={handleTouchStart}
       aria-label={`${isMovable ? 'Movable ' : ''}participant ${name}`}
       role={isMovable ? "button" : undefined}
+      tabIndex={isMovable ? 0 : undefined}
     >
       {isVideoOn && stream ? (
         <video
