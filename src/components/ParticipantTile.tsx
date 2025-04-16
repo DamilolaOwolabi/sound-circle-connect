@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { Mic, MicOff, Video, VideoOff, Volume2, VolumeX } from 'lucide-react';
@@ -70,15 +69,21 @@ const ParticipantTile = ({
     if (initialPosition && (initialPosition.x !== position.x || initialPosition.y !== position.y)) {
       setPosition(initialPosition);
     }
-  }, [initialPosition, position.x, position.y]);
+  }, [initialPosition]);
 
   // Handle animation state
   useEffect(() => {
-    if (isAnimating && !isSelfView && !hasAnimated) {
-      // Mark that this participant has been animated
-      setHasAnimated(true);
+    if (isAnimating && !hasAnimated) {
+      // Mark as animated after a delay to trigger the animation
+      const timer = setTimeout(() => {
+        setHasAnimated(true);
+      }, 50);
+      return () => clearTimeout(timer);
+    } else if (!isAnimating && hasAnimated) {
+      // Reset animation state when animation is complete
+      setHasAnimated(false);
     }
-  }, [isAnimating, isSelfView, hasAnimated]);
+  }, [isAnimating, hasAnimated]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isMovable || !tileRef.current) return;
@@ -252,7 +257,7 @@ const ParticipantTile = ({
       transition: isDragging 
         ? 'none' 
         : isAnimating 
-          ? 'left 2s cubic-bezier(0.34, 1.56, 0.64, 1), top 2s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s ease-out, opacity 0.5s ease-out' 
+          ? 'left 2.5s cubic-bezier(0.34, 1.56, 0.64, 1), top 2.5s cubic-bezier(0.34, 1.56, 0.64, 1)' 
           : 'none',
     } : {}),
     width: `${radiusSize * 2}px`,
@@ -274,11 +279,12 @@ const ParticipantTile = ({
   };
 
   // Add entrance animation styles when isAnimating is true
-  const animationStyles: React.CSSProperties = isAnimating && !isSelfView ? {
+  const animationStyles: React.CSSProperties = isAnimating ? {
     opacity: hasAnimated ? 1 : 0,
     transform: hasAnimated 
       ? 'translate(-50%, -50%) scale(1)' 
       : 'translate(-50%, -50%) scale(0.5)',
+    transition: 'opacity 0.5s ease-out, transform 0.5s ease-out'
   } : {};
 
   return (

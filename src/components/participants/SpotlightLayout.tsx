@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import ParticipantTile from '../ParticipantTile';
 import { ParticipantWithPosition, AudioConnection } from './types';
 
@@ -16,34 +16,6 @@ const SpotlightLayout = ({
   localUserPosition,
   audioConnections = []
 }: SpotlightLayoutProps) => {
-  const [viewportDimensions, setViewportDimensions] = useState({
-    width: 0,
-    height: 0
-  });
-  
-  useEffect(() => {
-    // Get the container dimensions for proper positioning
-    const updateDimensions = () => {
-      const container = document.querySelector('.spotlight-container');
-      if (container) {
-        const rect = container.getBoundingClientRect();
-        setViewportDimensions({
-          width: rect.width,
-          height: rect.height
-        });
-      }
-    };
-    
-    updateDimensions();
-    
-    // Only update on window resize - no periodic updates to prevent unwanted movement
-    window.addEventListener('resize', updateDimensions);
-    
-    return () => {
-      window.removeEventListener('resize', updateDimensions);
-    };
-  }, []);
-
   // Determine if a participant is connected to the local user
   const isConnectedToLocalUser = (participantId: string): boolean => {
     return audioConnections.some(
@@ -71,7 +43,7 @@ const SpotlightLayout = ({
             stream={participant.stream}
             className="radius-mode-participant"
             initialPosition={finalPosition}
-            isAnimating={isAnimating} // Allow animation during entrance only
+            isAnimating={isAnimating} // Pass the animation state
             isMovable={participant.isMovable || false}
             isConnected={isConnected}
             speakingMode={participant.speakingMode}

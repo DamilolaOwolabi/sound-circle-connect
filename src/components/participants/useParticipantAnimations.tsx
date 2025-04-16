@@ -17,8 +17,17 @@ const useParticipantAnimations = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [participantsWithPositions, setParticipantsWithPositions] = useState<ParticipantWithPosition[]>([]);
   const isFirstLoad = useRef(true);
+  const prevLayoutRef = useRef(layout);
+  const prevParticipantsRef = useRef(allParticipants.length);
 
   useEffect(() => {
+    const shouldAnimate = isFirstLoad.current || 
+                         prevLayoutRef.current !== layout ||
+                         prevParticipantsRef.current !== allParticipants.length;
+    
+    prevLayoutRef.current = layout;
+    prevParticipantsRef.current = allParticipants.length;
+
     if (layout === 'grid') {
       const gridParticipants: ParticipantWithPosition[] = allParticipants.map(p => ({
         ...p,
@@ -30,7 +39,7 @@ const useParticipantAnimations = ({
       return;
     }
     
-    if (layout === 'spotlight' && isFirstLoad.current && allParticipants.length > 0) {
+    if (layout === 'spotlight' && shouldAnimate) {
       setIsAnimating(true);
       
       const animatedPositions: ParticipantWithPosition[] = allParticipants.map((p, index) => {
@@ -45,22 +54,25 @@ const useParticipantAnimations = ({
       
       setParticipantsWithPositions(animatedPositions);
       
-      setTimeout(() => {
+      const animationTimer = setTimeout(() => {
         isFirstLoad.current = false;
         
         const stablePositions = calculateStablePositions(allParticipants, localUserPosition);
         setParticipantsWithPositions(stablePositions);
         
-        setTimeout(() => {
+        const endAnimationTimer = setTimeout(() => {
           setIsAnimating(false);
-        }, 3000);
-      }, 500);
-    } else {
-      setIsAnimating(false);
+        }, 2500);
+        
+        return () => clearTimeout(endAnimationTimer);
+      }, 100);
+      
+      return () => clearTimeout(animationTimer);
+    } else if (layout === 'spotlight') {
       const stablePositions = calculateStablePositions(allParticipants, localUserPosition);
       setParticipantsWithPositions(stablePositions);
     }
-  }, [layout, allParticipants, localUserPosition]);
+  }, [layout, allParticipants.length, localUserPosition]);
 
   const calculateStablePositions = (
     participants: Participant[], 
