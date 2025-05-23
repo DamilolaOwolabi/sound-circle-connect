@@ -8,13 +8,15 @@ interface SpotlightLayoutProps {
   isAnimating: boolean;
   localUserPosition?: { x: number, y: number };
   audioConnections?: AudioConnection[];
+  onParticipantPositionChange?: (participantId: string, position: { x: number, y: number }) => void;
 }
 
 const SpotlightLayout = ({ 
   participantsWithPositions, 
   isAnimating, 
   localUserPosition,
-  audioConnections = []
+  audioConnections = [],
+  onParticipantPositionChange
 }: SpotlightLayoutProps) => {
   // Determine if a participant is connected to the local user
   const isConnectedToLocalUser = (participantId: string): boolean => {
@@ -43,10 +45,11 @@ const SpotlightLayout = ({
             stream={participant.stream}
             className="radius-mode-participant"
             initialPosition={finalPosition}
-            isAnimating={isAnimating} // Pass the animation state
-            isMovable={participant.isMovable || false}
+            isAnimating={isAnimating}
+            isMovable={true} // Make all participants movable in spotlight mode
             isConnected={isConnected}
             speakingMode={participant.speakingMode}
+            onPositionChange={(position) => onParticipantPositionChange?.(participant.id, position)}
           />
         );
       })}

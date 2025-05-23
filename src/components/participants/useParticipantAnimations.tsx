@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { Participant, ParticipantWithPosition } from './types';
 
@@ -6,19 +7,30 @@ interface UseParticipantAnimationsProps {
   allParticipants: Participant[];
   localUserRadiusSize: number;
   localUserPosition?: { x: number, y: number };
+  onParticipantPositionUpdate?: (participantId: string, position: { x: number, y: number }) => void;
 }
 
 const useParticipantAnimations = ({ 
   layout, 
   allParticipants,
   localUserRadiusSize,
-  localUserPosition = { x: 50, y: 50 }  // Default to center if not provided
+  localUserPosition = { x: 50, y: 50 },
+  onParticipantPositionUpdate
 }: UseParticipantAnimationsProps) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [participantsWithPositions, setParticipantsWithPositions] = useState<ParticipantWithPosition[]>([]);
+  const [participantPositions, setParticipantPositions] = useState<Record<string, { x: number, y: number }>>({});
   const isFirstLoad = useRef(true);
   const prevLayoutRef = useRef(layout);
   const prevParticipantsRef = useRef(allParticipants.length);
+
+  const handleParticipantPositionChange = (participantId: string, position: { x: number, y: number }) => {
+    setParticipantPositions(prev => ({
+      ...prev,
+      [participantId]: position
+    }));
+    onParticipantPositionUpdate?.(participantId, position);
+  };
 
   useEffect(() => {
     const shouldAnimate = isFirstLoad.current || 
@@ -31,7 +43,8 @@ const useParticipantAnimations = ({
     if (layout === 'grid') {
       const gridParticipants: ParticipantWithPosition[] = allParticipants.map(p => ({
         ...p,
-        position: { x: 50, y: 50 }
+        position: { x: 50, y: 50 },
+        isMovable: false
       }));
       
       setParticipantsWithPositions(gridParticipants);
@@ -48,7 +61,8 @@ const useParticipantAnimations = ({
         
         return {
           ...p,
-          position: { x: startX, y: startY }
+          position: { x: startX, y: startY },
+          isMovable: true
         };
       });
       
@@ -74,21 +88,29 @@ const useParticipantAnimations = ({
     }
   }, [layout, allParticipants.length, localUserPosition]);
 
+  // Update positions when manually moved
+  useEffect(() => {
+    if (layout === 'spotlight') {
+      setParticipantsWithPositions(prev => 
+        prev.map(p => ({
+          ...p,
+          position: participantPositions[p.id] || p.position || { x: 50, y: 50 }
+        }))
+      );
+    }
+  }, [participantPositions, layout]);
+
   const calculateStablePositions = (
     participants: Participant[], 
     centerPos: { x: number, y: number }
   ): ParticipantWithPosition[] => {
     return participants.map((p, index) => {
-      if ('position' in p && 
-          p.position && 
-          typeof p.position === 'object' && 
-          'x' in p.position && 
-          'y' in p.position && 
-          typeof p.position.x === 'number' && 
-          typeof p.position.y === 'number') {
+      // Check if this participant has a manually set position
+      if (participantPositions[p.id]) {
         return {
           ...p,
-          position: p.position as { x: number, y: number }
+          position: participantPositions[p.id],
+          isMovable: true
         };
       }
       
@@ -106,14 +128,16 @@ const useParticipantAnimations = ({
       
       return {
         ...p,
-        position: { x: boundedX, y: boundedY }
+        position: { x: boundedX, y: boundedY },
+        isMovable: true
       };
     });
   };
 
   return {
     isAnimating,
-    participantsWithPositions
+    participantsWithPositions,
+    handleParticipantPositionChange
   };
 };
 

@@ -43,11 +43,14 @@ const ParticipantsGrid = ({
   const allParticipants = [...mockParticipants, ...remoteParticipants];
   
   // Animation states from custom hook
-  const { isAnimating, participantsWithPositions } = useParticipantAnimations({
+  const { isAnimating, participantsWithPositions, handleParticipantPositionChange } = useParticipantAnimations({
     layout,
     allParticipants,
     localUserRadiusSize: localUser.radiusSize,
-    localUserPosition: localUser.position
+    localUserPosition: localUser.position,
+    onParticipantPositionUpdate: (participantId, position) => {
+      console.log(`Participant ${participantId} moved to:`, position);
+    }
   });
 
   // Local user with position
@@ -132,6 +135,7 @@ const ParticipantsGrid = ({
             isAnimating={isAnimating}
             localUserPosition={localUser.position}
             audioConnections={audioConnections}
+            onParticipantPositionChange={handleParticipantPositionChange}
           />
         )}
       </div>
